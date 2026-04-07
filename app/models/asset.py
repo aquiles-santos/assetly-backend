@@ -6,28 +6,49 @@ class Asset(db.Model):
     __tablename__ = 'assets'
 
     id = db.Column(db.Integer, primary_key=True)
-    ticker = db.Column(db.String(32), unique=True, nullable=False)
-    name = db.Column(db.String(256), nullable=True)
-    exchange = db.Column(db.String(64), nullable=True)
-    currency = db.Column(db.String(8), nullable=True)
+    symbol = db.Column(db.String(32), unique=True, nullable=False)
+    name = db.Column(db.String(256), nullable=False)
+    asset_type = db.Column(db.String(64), nullable=False)
     sector = db.Column(db.String(128), nullable=True)
-    price = db.Column(db.Float, nullable=True)
+    exchange = db.Column(db.String(64), nullable=True)
+    currency = db.Column(db.String(3), nullable=False)
+    current_price = db.Column(db.Float, nullable=True)
+    open_price = db.Column(db.Float, nullable=True)
+    close_price = db.Column(db.Float, nullable=True)
+    day_high = db.Column(db.Float, nullable=True)
+    day_low = db.Column(db.Float, nullable=True)
+    volume = db.Column(db.BigInteger, nullable=True)
     market_cap = db.Column(db.Float, nullable=True)
-    last_price_update = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    pe_ratio = db.Column(db.Float, nullable=True)
+    dividend_yield = db.Column(db.Float, nullable=True)
+    external_api_url = db.Column(db.String(1024), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # relationships
+    market_snapshots = db.relationship(
+        'MarketSnapshot', backref='asset', cascade='all, delete-orphan', lazy='dynamic'
+    )
+    sync_logs = db.relationship(
+        'SyncLog', backref='asset', cascade='all, delete-orphan', lazy='dynamic'
+    )
 
     def to_dict(self):
         return {
             'id': self.id,
-            'ticker': self.ticker,
+            'symbol': self.symbol,
             'name': self.name,
+            'asset_type': self.asset_type,
             'exchange': self.exchange,
             'currency': self.currency,
             'sector': self.sector,
-            'price': self.price,
+            'current_price': self.current_price,
             'market_cap': self.market_cap,
-            'last_price_update': self.last_price_update.isoformat() if self.last_price_update else None,
+            'pe_ratio': self.pe_ratio,
+            'dividend_yield': self.dividend_yield,
+            'external_api_url': self.external_api_url,
+            'notes': self.notes,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
