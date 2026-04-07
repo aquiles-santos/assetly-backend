@@ -4,6 +4,21 @@ from app.controllers.asset_controller import AssetController
 bp = Blueprint('assets', __name__)
 
 
+# collection
+bp.add_url_rule('/assets', view_func=AssetController.list_assets, methods=['GET'])
+bp.add_url_rule('/assets', view_func=AssetController.create_asset, methods=['POST'])
+
+
+# single resource
+bp.add_url_rule('/assets/<int:asset_id>', view_func=AssetController.get_asset, methods=['GET'])
+bp.add_url_rule('/assets/<int:asset_id>', view_func=AssetController.update_asset, methods=['PUT'])
+bp.add_url_rule('/assets/<int:asset_id>', view_func=AssetController.delete_asset, methods=['DELETE'])
+from flask import Blueprint
+from app.controllers.asset_controller import AssetController
+
+bp = Blueprint('assets', __name__)
+
+
 @bp.route('/assets', methods=['GET'])
 def list_assets():
     return AssetController.list_assets()
