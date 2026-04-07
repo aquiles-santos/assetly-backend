@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+  title: Assetly API
+  version: 0.1.0
+paths:
+  /api/assets:
+    get:
+      summary: List assets
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create asset
+      responses:
+        '201':
+          description: Created
+  /api/assets/{asset_id}:
+    get:
+      summary: Get asset
+      parameters:
+        - in: path
+          name: asset_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not found
