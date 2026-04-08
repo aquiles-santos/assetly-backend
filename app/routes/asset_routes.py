@@ -28,6 +28,12 @@ def update_asset(asset_id: int):
         return AssetController.update_asset(asset_id)
 
 
+@bp.route('/assets/<int:asset_id>', methods=['PATCH'])
+def patch_asset(asset_id: int):
+        """Partially update asset. Accepts partial fields and only updates provided ones."""
+        return AssetController.patch_asset(asset_id)
+
+
 @bp.route('/assets/<int:asset_id>', methods=['DELETE'])
 def delete_asset(asset_id: int):
         """Delete asset. See `docs/openapi.yaml` for errors like `pending_syncs`."""

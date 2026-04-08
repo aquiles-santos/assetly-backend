@@ -66,6 +66,19 @@ class AssetController:
             return jsonify({'error': str(e)}), 409
 
     @staticmethod
+    def patch_asset(asset_id: int):
+        payload = request.get_json() or {}
+        try:
+            updated = AssetService.patch_asset(asset_id, payload)
+            if not updated:
+                return jsonify({'message': 'Not found'}), 404
+            return jsonify(updated), 200
+        except AssetService.ValidationError as e:
+            return jsonify({'error': str(e)}), 400
+        except AssetService.DuplicateError as e:
+            return jsonify({'error': str(e)}), 409
+
+    @staticmethod
     def delete_asset(asset_id: int):
         try:
             ok = AssetService.delete_asset(asset_id)
