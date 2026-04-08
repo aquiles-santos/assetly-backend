@@ -4,7 +4,7 @@ info:
   version: 0.1.0
   description: API para gerenciar ativos (tickers), com endpoints para listagem, criação, atualização, remoção e sincronização.
 servers:
-  - url: http://localhost:5000
+  - url: /
     description: Local development server
 tags:
   - name: Assets
