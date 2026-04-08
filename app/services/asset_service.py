@@ -81,7 +81,7 @@ class AssetService:
         if not asset:
             return None
 
-        # For a full update, require required fields
+        # For a full update (PUT) follow REST semantics: require required fields
         required = ['symbol', 'name', 'asset_type', 'currency']
         missing = [f for f in required if not data.get(f)]
         if missing:
@@ -95,6 +95,26 @@ class AssetService:
                 raise AssetService.DuplicateError(f"symbol_already_exists: {new_symbol}")
 
         # explicitly update `updated_at`
+        data['updated_at'] = datetime.utcnow()
+
+        updated = AssetRepository.update(asset, data)
+        return updated.to_dict()
+
+    @staticmethod
+    def patch_asset(asset_id: int, data: dict) -> Optional[dict]:
+        """Partial update: only apply provided fields. Do not require all required fields."""
+        asset = AssetRepository.get_by_id(asset_id)
+        if not asset:
+            return None
+
+        # If symbol provided and changing, ensure uniqueness
+        new_symbol = data.get('symbol')
+        if new_symbol and new_symbol != asset.symbol:
+            exists = AssetRepository.get_by_symbol(new_symbol)
+            if exists and exists.id != asset.id:
+                raise AssetService.DuplicateError(f"symbol_already_exists: {new_symbol}")
+
+        # Update timestamp
         data['updated_at'] = datetime.utcnow()
 
         updated = AssetRepository.update(asset, data)
