@@ -36,3 +36,25 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Optional recommended ignores
+# local env variants
+.env.local
+.env.*
+
+# Node modules (if adding JS tooling)
+node_modules/
+
+# pip build artifacts
+pip-wheel-metadata/
+
+# coverage xml
+coverage.xml
+
+# docker artifacts
+docker-compose.override.yml
+*.tar
+
+# editor/IDE extras
+.history/
+.ropeproject/
