@@ -23,7 +23,9 @@ def create_app(config_object: Optional[str] = None):
     # init extensions
     db.init_app(app)
     ma.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # Allow Swagger UI and other tooling to fetch spec and assets from the app
+    # (include non-API routes like `/openapi.yaml` and `/apidocs`)
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
     # Swagger / OpenAPI configuration
     # Ensure Markup is available on the flask module for older flasgger imports
@@ -91,13 +93,13 @@ def create_app(config_object: Optional[str] = None):
             <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
             <script>
               window.onload = function() {
-                SwaggerUIBundle({
-                  url: '/openapi.yaml',
-                  dom_id: '#swagger-ui',
-                  presets: [
-                    SwaggerUIBundle.presets.apis
-                  ],
-                });
+                                SwaggerUIBundle({
+                                    url: window.location.origin + '/openapi.yaml',
+                                    dom_id: '#swagger-ui',
+                                    presets: [
+                                        SwaggerUIBundle.presets.apis
+                                    ],
+                                });
               };
             </script>
           </body>
