@@ -50,7 +50,7 @@ make docs
 
 Notes:
 
-- `make docs` starts the app on port 5001 and opens `http://127.0.0.1:5001/apidocs` in your default browser. Logs are in `/tmp/assetly_docs.log`.
+- `make docs` starts the app on port 5000 and opens `http://127.0.0.1:5000/apidocs` in your default browser. Logs are in `/tmp/assetly_docs.log`.
 - If you don't have a GUI (headless server), the server will run and you can open the URL from another machine.
 
 ## OpenAPI validation (CI)

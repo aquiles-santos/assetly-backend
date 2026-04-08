@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PORT=${PORT:-5001}
+PORT=${PORT:-5000}
 LOG=$(mktemp -t assetly_test.XXXXXX.log)
 PIDFILE=$(mktemp -t assetly_test.XXXXXX.pid)
 TMPRESP=$(mktemp -t assetly_resp.XXXXXX.json)
