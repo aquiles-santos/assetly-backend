@@ -2,20 +2,81 @@ openapi: 3.0.0
 info:
   title: Assetly API
   version: 0.1.0
+  description: API para gerenciar ativos (tickers), com endpoints para listagem, criação, atualização, remoção e sincronização.
+servers:
+  - url: http://localhost:5001
+    description: Local development server
+tags:
+  - name: Assets
+    description: Operações relacionadas a ativos
 paths:
   /api/assets:
     get:
+      tags:
+        - Assets
       summary: List assets
       responses:
         '200':
-          description: OK
+          description: Paginated list of assets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Asset'
+              example:
+                total: 123
+                offset: 0
+                limit: 50
+                items:
+                  - id: 1
+                    symbol: AAPL
+                    name: Apple Inc.
+                    asset_type: equity
+                    exchange: NASDAQ
+                    currency: USD
+                    sector: Technology
+                    current_price: 170.12
+                    market_cap: 2700000000000
     post:
+      tags:
+        - Assets
       summary: Create asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetInput'
+            example:
+              symbol: AAPL
+              name: Apple Inc.
+              asset_type: equity
+              currency: USD
+              exchange: NASDAQ
+              sector: Technology
+              current_price: 170.12
+              market_cap: 2700000000000
       responses:
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
   /api/assets/{asset_id}:
     get:
+      tags:
+        - Assets
       summary: Get asset
       parameters:
         - in: path
@@ -25,6 +86,269 @@ paths:
             type: integer
       responses:
         '200':
-          description: OK
+          description: Asset object with snapshots and last sync
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetDetails'
+              example:
+                id: 1
+                symbol: AAPL
+                name: Apple Inc.
+                asset_type: equity
+                exchange: NASDAQ
+                currency: USD
+                sector: Technology
+                current_price: 170.12
+                market_cap: 2700000000000
+                created_at: '2020-01-01T12:00:00Z'
+                updated_at: '2026-04-07T12:00:00Z'
+                market_snapshots:
+                  - id: 11
+                    asset_id: 1
+                    price: 170.12
+                    open_price: 169.00
+                    close_price: 170.00
+                    high_price: 171.00
+                    low_price: 168.50
+                    volume: 20000000
+                    captured_at: '2026-04-07T12:34:56Z'
+                    created_at: '2026-04-07T12:35:00Z'
+                last_sync:
+                  id: 5
+                  asset_id: 1
+                  source_id: 2
+                  status: success
+                  message: null
+                  requested_url: 'https://api.example.com/sync/AAPL'
+                  response_time_ms: 320
+                  synced_at: '2026-04-07T11:59:00Z'
+                  created_at: '2026-04-07T11:59:00Z'
         '404':
           description: Not found
+    put:
+      tags:
+        - Assets
+      summary: Update asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Asset'
+            example:
+              name: Apple Incorporated
+              current_price: 171.0
+      responses:
+        '200':
+          description: Updated asset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '400':
+          description: Bad request (missing or invalid fields)
+          content:
+            application/json:
+              example:
+                error: 'missing_fields: symbol, name'
+        '409':
+          description: Conflict (duplicate symbol)
+          content:
+            application/json:
+              example:
+                error: 'symbol_already_exists: AAPL'
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - Assets
+      summary: Delete asset
+      responses:
+        '204':
+          description: No Content (deleted)
+        '404':
+          description: Not found
+          content:
+            application/json:
+              example:
+                message: 'Not found'
+        '409':
+          description: Conflict (pending syncs)
+          content:
+            application/json:
+              example:
+                error: 'pending_syncs'
+    post:
+      tags:
+        - Assets
+      summary: Trigger external sync for asset
+      responses:
+        '202':
+          description: Sync started
+          content:
+            application/json:
+              example:
+                message: 'sync_started'
+                job_id: 'sync-1-1610000000'
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    Asset:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        name:
+          type: string
+        asset_type:
+          type: string
+        exchange:
+          type: string
+        currency:
+          type: string
+        sector:
+          type: string
+        current_price:
+          type: number
+          format: float
+        market_cap:
+          type: number
+          format: float
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    AssetInput:
+      type: object
+      required: [symbol, name, asset_type, currency]
+      properties:
+        symbol:
+          type: string
+          description: Unique asset symbol/ticker
+        name:
+          type: string
+        asset_type:
+          type: string
+        exchange:
+          type: string
+        currency:
+          type: string
+        sector:
+          type: string
+        current_price:
+          type: number
+        market_cap:
+          type: number
+    MarketSnapshot:
+      type: object
+      properties:
+        id:
+          type: integer
+        asset_id:
+          type: integer
+        price:
+          type: number
+          format: float
+        open_price:
+          type: number
+        close_price:
+          type: number
+        high_price:
+          type: number
+        low_price:
+          type: number
+        volume:
+          type: integer
+        captured_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    AssetDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        name:
+          type: string
+        asset_type:
+          type: string
+        exchange:
+          type: string
+        currency:
+          type: string
+        sector:
+          type: string
+        current_price:
+          type: number
+          format: float
+        market_cap:
+          type: number
+          format: float
+        pe_ratio:
+          type: number
+        dividend_yield:
+          type: number
+        external_api_url:
+          type: string
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        market_snapshots:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketSnapshot'
+        last_sync:
+          type: object
+          properties:
+            id:
+              type: integer
+            asset_id:
+              type: integer
+            source_id:
+              type: integer
+            status:
+              type: string
+            message:
+              type: string
+            requested_url:
+              type: string
+            response_time_ms:
+              type: integer
+            synced_at:
+              type: string
+              format: date-time
+            created_at:
+              type: string
+              format: date-time
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        job_id:
+          type: string
+        # operation objects moved to the path /api/assets/{asset_id}

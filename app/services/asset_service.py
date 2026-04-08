@@ -22,8 +22,8 @@ class AssetService:
         sector: str = None,
         order_by: str = None,
         order_dir: str = 'asc',
-    ) -> List[dict]:
-        assets = AssetRepository.get_filtered(
+    ) -> dict:
+        items, total = AssetRepository.get_filtered_with_count(
             symbol=symbol,
             name=name,
             asset_type=asset_type,
@@ -33,7 +33,12 @@ class AssetService:
             order_by=order_by,
             order_dir=order_dir,
         )
-        return [a.to_dict() for a in assets]
+        return {
+            'total': total,
+            'offset': offset,
+            'limit': limit,
+            'items': [a.to_dict() for a in items],
+        }
 
     @staticmethod
     def get_asset(asset_id: int) -> Optional[dict]:

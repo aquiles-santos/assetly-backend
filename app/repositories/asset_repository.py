@@ -47,6 +47,46 @@ class AssetRepository:
         return q.offset(offset).limit(limit).all()
 
     @staticmethod
+    def get_filtered_with_count(
+        symbol: str = None,
+        name: str = None,
+        asset_type: str = None,
+        sector: str = None,
+        offset: int = 0,
+        limit: int = 100,
+        order_by: str = None,
+        order_dir: str = 'asc',
+    ) -> tuple:
+        q = Asset.query
+
+        if symbol:
+            q = q.filter(Asset.symbol == symbol)
+        if name:
+            q = q.filter(Asset.name.ilike(f"%{name}%"))
+        if asset_type:
+            q = q.filter(Asset.asset_type == asset_type)
+        if sector:
+            q = q.filter(Asset.sector.ilike(f"%{sector}%"))
+
+        cols = {
+            'name': Asset.name,
+            'symbol': Asset.symbol,
+            'current_price': Asset.current_price,
+            'updated_at': Asset.updated_at,
+        }
+
+        col = cols.get(order_by)
+        if col is not None:
+            if (order_dir or '').lower() == 'desc':
+                q = q.order_by(col.desc())
+            else:
+                q = q.order_by(col.asc())
+
+        total = q.count()
+        items = q.offset(offset).limit(limit).all()
+        return items, total
+
+    @staticmethod
     def get_recent_snapshots(asset_id: int, limit: int = 10):
         from app.models.market_snapshot import MarketSnapshot
 
