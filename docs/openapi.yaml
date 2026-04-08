@@ -130,14 +130,23 @@ paths:
       tags:
         - Assets
       summary: Update asset
+      parameters:
+        - in: path
+          name: asset_id
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Asset'
+              $ref: '#/components/schemas/AssetInput'
             example:
+              symbol: AAPL
               name: Apple Incorporated
+              asset_type: equity
+              currency: USD
               current_price: 171.0
       responses:
         '200':
@@ -160,10 +169,50 @@ paths:
                 error: 'symbol_already_exists: AAPL'
         '404':
           description: Not found
+    patch:
+      tags:
+        - Assets
+      summary: Partially update asset
+      parameters:
+        - in: path
+          name: asset_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Asset'
+            example:
+              name: Apple Incorporated
+              current_price: 171.0
+      responses:
+        '200':
+          description: Updated asset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '400':
+          description: Bad request (invalid fields)
+          content:
+            application/json:
+              example:
+                error: 'invalid_fields'
+        '404':
+          description: Not found
     delete:
       tags:
         - Assets
       summary: Delete asset
+      parameters:
+        - in: path
+          name: asset_id
+          required: true
+          schema:
+            type: integer
       responses:
         '204':
           description: No Content (deleted)
@@ -183,6 +232,12 @@ paths:
       tags:
         - Assets
       summary: Trigger external sync for asset
+      parameters:
+        - in: path
+          name: asset_id
+          required: true
+          schema:
+            type: integer
       responses:
         '202':
           description: Sync started
