@@ -18,7 +18,7 @@ run:
 serve:
 	gunicorn -w 4 -b 0.0.0.0:5000 'run:app'
 
-	test:
+test:
 	# ensure test dependencies are available
 	# prefer running the integration test-and-cleanup script
 	chmod +x scripts/test_and_cleanup.sh && PORT=5000 ./scripts/test_and_cleanup.sh
