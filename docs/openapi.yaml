@@ -25,8 +25,8 @@ paths:
                 properties:
                   total:
                     type: integer
-                  offset:
-                    type: integer
+                    offset:
+                      type: integer
                   limit:
                     type: integer
                   items:
@@ -228,6 +228,7 @@ paths:
             application/json:
               example:
                 error: 'pending_syncs'
+  /api/assets/{asset_id}/sync:
     post:
       tags:
         - Assets
