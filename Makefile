@@ -1,4 +1,4 @@
-.PHONY: init init-db seed-db reset-db run serve test clean ci-validate docs setup
+.PHONY: init init-db seed-db import-csv reset-db run serve test clean ci-validate docs setup
 
 VENV?=.venv
 PYTHON=$(VENV)/bin/python
@@ -14,6 +14,12 @@ init-db:
 
 seed-db:
 	$(PYTHON) -c "from app import create_app; from app.utils.db_init import seed_db; app=create_app(); seed_db(app)"
+
+import-csv:
+	@if [ -z "$(CSV)" ]; then \
+		echo "Usage: make import-csv CSV=/path/to/assets.csv [UPDATE=1]"; exit 1; \
+	fi
+	$(PYTHON) -m app.utils.import_assets_csv $(CSV) $(if $(UPDATE),--update-existing,)
 
 reset-db:
 	$(PYTHON) -c "from app import create_app; from app.utils.db_init import init_db; app=create_app(); init_db(app, reset=True)"

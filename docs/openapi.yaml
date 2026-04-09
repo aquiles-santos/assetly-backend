@@ -258,61 +258,6 @@ paths:
               example:
                 message: sync_completed
                 asset_id: 6
-                job_id: sync-6-1775717266
-                asset:
-                  id: 6
-                  symbol: VALE3.SA
-                  name: Vale S.A.
-                  asset_type: equity
-                  exchange: B3
-                  currency: BRL
-                  sector: Materials
-                  current_price: 85.59
-                  open_price: 86.5
-                  close_price: 83.69
-                  day_high: 86.72
-                  day_low: 84.73
-                  volume: 24942400
-                  market_cap: 365427718864.92
-                  pe_ratio: 30.14
-                  dividend_yield: 0.0824
-                  external_api_url: https://finance.yahoo.com/quote/VALE3.SA
-                  notes: Development seed with static reference values for a real listed asset.
-                  created_at: '2026-04-09T07:17:07.907893'
-                  updated_at: '2026-04-09T07:54:26.915050'
-                market_snapshot:
-                  id: 1
-                  asset_id: 6
-                  price: 85.59
-                  open_price: 86.5
-                  close_price: 83.69
-                  high_price: 86.72
-                  low_price: 84.73
-                  volume: 24942400
-                  captured_at: '2026-04-08T20:07:49'
-                  created_at: '2026-04-09T07:54:26.915050'
-                last_sync:
-                  id: 3
-                  asset_id: 6
-                  source_id: 1
-                  status: success
-                  message: yahoo_finance_sync_completed
-                  requested_url: https://finance.yahoo.com/quote/VALE3.SA
-                  response_time_ms: 411
-                  synced_at: '2026-04-09T07:54:26.915050'
-                  created_at: '2026-04-09T07:54:26.921015'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              example:
-                message: Not found
-        '502':
-          description: Market data provider error
-          content:
-            application/json:
-              example:
-                error: market_data_provider_error
 components:
   schemas:
     Asset:
@@ -377,18 +322,6 @@ components:
           description: Unique asset symbol/ticker
         name:
           type: string
-        asset_type:
-          type: string
-        exchange:
-          type: string
-        currency:
-          type: string
-        sector:
-          type: string
-        current_price:
-          type: number
-        market_cap:
-          type: number
     MarketSnapshot:
       type: object
       properties:

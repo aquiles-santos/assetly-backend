@@ -23,9 +23,18 @@ def create_app(config_object: Optional[str] = None):
     # init extensions
     db.init_app(app)
     ma.init_app(app)
-    # Allow Swagger UI and other tooling to fetch spec and assets from the app
-    # (include non-API routes like `/openapi.yaml` and `/apidocs`)
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    # Allow the frontend to run either from file:// (Origin: null) or from a
+    # local static server such as python3 -m http.server 5500.
+    CORS(
+        app,
+        resources={
+            r"/*": {
+                "origins": app.config['CORS_ALLOWED_ORIGINS'],
+                "allow_headers": app.config['CORS_ALLOW_HEADERS'],
+                "methods": app.config['CORS_ALLOW_METHODS'],
+            }
+        },
+    )
 
     # Swagger / OpenAPI configuration
     # Ensure Markup is available on the flask module for older flasgger imports
