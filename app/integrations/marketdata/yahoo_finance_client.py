@@ -10,6 +10,15 @@ class MarketDataError(Exception):
 class YahooFinanceClient:
     BASE_URL = 'https://finance.yahoo.com'
 
+    ASSET_TYPE_MAP = {
+        'EQUITY': 'equity',
+        'ETF': 'etf',
+        'MUTUALFUND': 'fund',
+        'INDEX': 'index',
+        'CURRENCY': 'forex',
+        'CRYPTOCURRENCY': 'crypto',
+    }
+
     @classmethod
     def quote_url(cls, symbol: str) -> str:
         return f'{cls.BASE_URL}/quote/{symbol}'
@@ -50,6 +59,14 @@ class YahooFinanceClient:
         return datetime.utcnow()
 
     @classmethod
+    def _normalize_asset_type(cls, value):
+        if not value:
+            return 'equity'
+
+        normalized = str(value).strip().upper().replace(' ', '')
+        return cls.ASSET_TYPE_MAP.get(normalized, str(value).strip().lower())
+
+    @classmethod
     def fetch_quote(cls, symbol: str) -> dict:
         ticker = yf.Ticker(symbol)
         fast_info = dict(ticker.fast_info or {})
@@ -64,6 +81,8 @@ class YahooFinanceClient:
         return {
             'symbol': symbol,
             'name': info.get('longName') or info.get('shortName'),
+            'asset_type': cls._normalize_asset_type(info.get('quoteType')),
+            'sector': info.get('sector') or info.get('category'),
             'exchange': info.get('fullExchangeName') or info.get('exchange') or fast_info.get('exchange'),
             'currency': info.get('currency') or fast_info.get('currency'),
             'current_price': current_price,
