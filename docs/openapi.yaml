@@ -92,38 +92,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/AssetDetails'
               example:
-                id: 1
-                symbol: AAPL
-                name: Apple Inc.
+                id: 6
+                symbol: VALE3.SA
+                name: Vale S.A.
                 asset_type: equity
-                exchange: NASDAQ
-                currency: USD
-                sector: Technology
-                current_price: 170.12
-                market_cap: 2700000000000
-                created_at: '2020-01-01T12:00:00Z'
-                updated_at: '2026-04-07T12:00:00Z'
+                exchange: B3
+                currency: BRL
+                sector: Materials
+                current_price: 85.59
+                open_price: 86.5
+                close_price: 83.69
+                day_high: 86.72
+                day_low: 84.73
+                volume: 24942400
+                market_cap: 365427718864.92
+                pe_ratio: 30.14
+                dividend_yield: 0.0824
+                external_api_url: https://finance.yahoo.com/quote/VALE3.SA
+                notes: Development seed with static reference values for a real listed asset.
+                created_at: '2026-04-09T07:17:07.907893'
+                updated_at: '2026-04-09T07:54:26.915050'
                 market_snapshots:
-                  - id: 11
-                    asset_id: 1
-                    price: 170.12
-                    open_price: 169.00
-                    close_price: 170.00
-                    high_price: 171.00
-                    low_price: 168.50
-                    volume: 20000000
-                    captured_at: '2026-04-07T12:34:56Z'
-                    created_at: '2026-04-07T12:35:00Z'
+                  - id: 1
+                    asset_id: 6
+                    price: 85.59
+                    open_price: 86.5
+                    close_price: 83.69
+                    high_price: 86.72
+                    low_price: 84.73
+                    volume: 24942400
+                    captured_at: '2026-04-08T20:07:49'
+                    created_at: '2026-04-09T07:54:26.915050'
                 last_sync:
-                  id: 5
-                  asset_id: 1
-                  source_id: 2
+                  id: 3
+                  asset_id: 6
+                  source_id: 1
                   status: success
-                  message: null
-                  requested_url: 'https://api.example.com/sync/AAPL'
-                  response_time_ms: 320
-                  synced_at: '2026-04-07T11:59:00Z'
-                  created_at: '2026-04-07T11:59:00Z'
+                  message: yahoo_finance_sync_completed
+                  requested_url: https://finance.yahoo.com/quote/VALE3.SA
+                  response_time_ms: 411
+                  synced_at: '2026-04-09T07:54:26.921015'
+                  created_at: '2026-04-09T07:54:26.921015'
         '404':
           description: Not found
     put:
@@ -232,7 +241,7 @@ paths:
     post:
       tags:
         - Assets
-      summary: Trigger external sync for asset
+      summary: Sync market data for asset
       parameters:
         - in: path
           name: asset_id
@@ -240,17 +249,70 @@ paths:
           schema:
             type: integer
       responses:
-        '202':
-          description: Sync started
+        '200':
+          description: Asset market data synchronized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetSyncResponse'
+              example:
+                message: sync_completed
+                asset_id: 6
+                job_id: sync-6-1775717266
+                asset:
+                  id: 6
+                  symbol: VALE3.SA
+                  name: Vale S.A.
+                  asset_type: equity
+                  exchange: B3
+                  currency: BRL
+                  sector: Materials
+                  current_price: 85.59
+                  open_price: 86.5
+                  close_price: 83.69
+                  day_high: 86.72
+                  day_low: 84.73
+                  volume: 24942400
+                  market_cap: 365427718864.92
+                  pe_ratio: 30.14
+                  dividend_yield: 0.0824
+                  external_api_url: https://finance.yahoo.com/quote/VALE3.SA
+                  notes: Development seed with static reference values for a real listed asset.
+                  created_at: '2026-04-09T07:17:07.907893'
+                  updated_at: '2026-04-09T07:54:26.915050'
+                market_snapshot:
+                  id: 1
+                  asset_id: 6
+                  price: 85.59
+                  open_price: 86.5
+                  close_price: 83.69
+                  high_price: 86.72
+                  low_price: 84.73
+                  volume: 24942400
+                  captured_at: '2026-04-08T20:07:49'
+                  created_at: '2026-04-09T07:54:26.915050'
+                last_sync:
+                  id: 3
+                  asset_id: 6
+                  source_id: 1
+                  status: success
+                  message: yahoo_finance_sync_completed
+                  requested_url: https://finance.yahoo.com/quote/VALE3.SA
+                  response_time_ms: 411
+                  synced_at: '2026-04-09T07:54:26.915050'
+                  created_at: '2026-04-09T07:54:26.921015'
+        '404':
+          description: Not found
           content:
             application/json:
               example:
-                message: 'sync_started'
-                job_id: 'sync-1-1610000000'
-        '404':
-          description: Not found
-        '500':
-          description: Internal server error
+                message: Not found
+        '502':
+          description: Market data provider error
+          content:
+            application/json:
+              example:
+                error: market_data_provider_error
 components:
   schemas:
     Asset:
@@ -273,9 +335,33 @@ components:
         current_price:
           type: number
           format: float
+        open_price:
+          type: number
+          format: float
+        close_price:
+          type: number
+          format: float
+        day_high:
+          type: number
+          format: float
+        day_low:
+          type: number
+          format: float
+        volume:
+          type: integer
         market_cap:
           type: number
           format: float
+        pe_ratio:
+          type: number
+          format: float
+        dividend_yield:
+          type: number
+          format: float
+        external_api_url:
+          type: string
+        notes:
+          type: string
         created_at:
           type: string
           format: date-time
@@ -329,6 +415,29 @@ components:
         created_at:
           type: string
           format: date-time
+    SyncLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        asset_id:
+          type: integer
+        source_id:
+          type: integer
+        status:
+          type: string
+        message:
+          type: string
+        requested_url:
+          type: string
+        response_time_ms:
+          type: integer
+        synced_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
     AssetDetails:
       type: object
       properties:
@@ -349,6 +458,20 @@ components:
         current_price:
           type: number
           format: float
+        open_price:
+          type: number
+          format: float
+        close_price:
+          type: number
+          format: float
+        day_high:
+          type: number
+          format: float
+        day_low:
+          type: number
+          format: float
+        volume:
+          type: integer
         market_cap:
           type: number
           format: float
@@ -371,28 +494,22 @@ components:
           items:
             $ref: '#/components/schemas/MarketSnapshot'
         last_sync:
-          type: object
-          properties:
-            id:
-              type: integer
-            asset_id:
-              type: integer
-            source_id:
-              type: integer
-            status:
-              type: string
-            message:
-              type: string
-            requested_url:
-              type: string
-            response_time_ms:
-              type: integer
-            synced_at:
-              type: string
-              format: date-time
-            created_at:
-              type: string
-              format: date-time
+          $ref: '#/components/schemas/SyncLog'
+    AssetSyncResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        asset_id:
+          type: integer
+        job_id:
+          type: string
+        asset:
+          $ref: '#/components/schemas/Asset'
+        market_snapshot:
+          $ref: '#/components/schemas/MarketSnapshot'
+        last_sync:
+          $ref: '#/components/schemas/SyncLog'
     ApiError:
       type: object
       properties:

@@ -1,6 +1,9 @@
-from typing import List, Optional
-from app.repositories.asset_repository import AssetRepository
 from datetime import datetime
+from time import perf_counter
+from typing import List, Optional
+
+from app.integrations.marketdata import MarketDataError, YahooFinanceClient
+from app.repositories.asset_repository import AssetRepository
 
 
 class AssetService:
@@ -9,7 +12,11 @@ class AssetService:
 
     class DuplicateError(Exception):
         pass
+
     class DeletionError(Exception):
+        pass
+
+    class SyncError(Exception):
         pass
 
     @staticmethod
@@ -132,3 +139,93 @@ class AssetService:
                 raise AssetService.DeletionError('pending_syncs')
             raise
         return True
+
+    @staticmethod
+    def sync_asset(asset_id: int) -> Optional[dict]:
+        asset = AssetRepository.get_by_id(asset_id)
+        if not asset:
+            return None
+
+        source = AssetRepository.get_or_create_sync_source(
+            name='Yahoo Finance',
+            base_url=YahooFinanceClient.BASE_URL,
+        )
+        requested_url = YahooFinanceClient.quote_url(asset.symbol)
+        started_at = perf_counter()
+
+        try:
+            quote = YahooFinanceClient.fetch_quote(asset.symbol)
+            quote_captured_at = quote['captured_at']
+            synced_at = datetime.utcnow()
+            asset_update = {
+                'current_price': quote['current_price'],
+                'open_price': quote['open_price'],
+                'close_price': quote['close_price'],
+                'day_high': quote['day_high'],
+                'day_low': quote['day_low'],
+                'volume': quote['volume'],
+                'market_cap': quote['market_cap'],
+                'pe_ratio': quote['pe_ratio'],
+                'dividend_yield': quote['dividend_yield'],
+                'updated_at': synced_at,
+            }
+
+            if quote.get('currency'):
+                asset_update['currency'] = quote['currency']
+            if quote.get('name'):
+                asset_update['name'] = quote['name']
+
+            updated_asset = AssetRepository.update(asset, asset_update)
+            snapshot = AssetRepository.create_market_snapshot(
+                asset_id=asset.id,
+                price=quote['current_price'],
+                captured_at=quote_captured_at,
+                open_price=quote['open_price'],
+                close_price=quote['close_price'],
+                high_price=quote['day_high'],
+                low_price=quote['day_low'],
+                volume=quote['volume'],
+            )
+            response_time_ms = int((perf_counter() - started_at) * 1000)
+            sync_log = AssetRepository.create_sync_log(
+                asset_id=asset.id,
+                source_id=source.id,
+                status='success',
+                synced_at=synced_at,
+                message='yahoo_finance_sync_completed',
+                requested_url=quote.get('requested_url', requested_url),
+                response_time_ms=response_time_ms,
+            )
+        except MarketDataError as e:
+            response_time_ms = int((perf_counter() - started_at) * 1000)
+            AssetRepository.create_sync_log(
+                asset_id=asset.id,
+                source_id=source.id,
+                status='failed',
+                synced_at=datetime.utcnow(),
+                message=str(e),
+                requested_url=requested_url,
+                response_time_ms=response_time_ms,
+            )
+            raise AssetService.SyncError(str(e)) from e
+        except Exception as e:
+            response_time_ms = int((perf_counter() - started_at) * 1000)
+            AssetRepository.create_sync_log(
+                asset_id=asset.id,
+                source_id=source.id,
+                status='failed',
+                synced_at=datetime.utcnow(),
+                message=f'unexpected_sync_error: {e}',
+                requested_url=requested_url,
+                response_time_ms=response_time_ms,
+            )
+            raise AssetService.SyncError('market_data_provider_error') from e
+
+        return {
+            'message': 'sync_completed',
+            'asset_id': updated_asset.id,
+            'job_id': f"sync-{updated_asset.id}-{int(synced_at.timestamp())}",
+            'asset': updated_asset.to_dict(),
+            'market_snapshot': snapshot.to_dict(),
+            'last_sync': sync_log.to_dict(),
+        }

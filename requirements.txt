@@ -12,6 +12,7 @@ marshmallow-sqlalchemy>=0.26
 
 # HTTP client for tests
 requests>=2.0
+yfinance>=0.2.54
 
 # Testing
 pytest>=7.0

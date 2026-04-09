@@ -1,6 +1,5 @@
 from flask import request, jsonify
 from app.services.asset_service import AssetService
-import time
 
 
 class AssetController:
@@ -93,11 +92,10 @@ class AssetController:
 
     @staticmethod
     def sync_asset(asset_id: int):
-        # Trigger an asynchronous sync for the asset (best-effort placeholder)
-        item = AssetService.get_asset(asset_id)
-        if not item:
-            return jsonify({'message': 'Not found'}), 404
-
-        # In a real implementation this would enqueue a background job.
-        job_id = f"sync-{asset_id}-{int(time.time())}"
-        return jsonify({'message': 'sync_started', 'job_id': job_id}), 202
+        try:
+            result = AssetService.sync_asset(asset_id)
+            if not result:
+                return jsonify({'message': 'Not found'}), 404
+            return jsonify(result), 200
+        except AssetService.SyncError as e:
+            return jsonify({'error': str(e)}), 502

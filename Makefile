@@ -1,4 +1,4 @@
-.PHONY: init init-db run serve test clean ci-validate docs setup
+.PHONY: init init-db seed-db reset-db run serve test clean ci-validate docs setup
 
 VENV?=.venv
 PYTHON=$(VENV)/bin/python
@@ -11,6 +11,12 @@ init:
 
 init-db:
 	$(PYTHON) -c "from app import create_app; from app.utils.db_init import init_db; app=create_app(); init_db(app)"
+
+seed-db:
+	$(PYTHON) -c "from app import create_app; from app.utils.db_init import seed_db; app=create_app(); seed_db(app)"
+
+reset-db:
+	$(PYTHON) -c "from app import create_app; from app.utils.db_init import init_db; app=create_app(); init_db(app, reset=True)"
 
 run:
 	$(PYTHON) run.py

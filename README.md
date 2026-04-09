@@ -21,12 +21,22 @@ Quickstart (virtualenv)
 # create virtualenv and install dependencies
 make init
 
-# initialize database (if needed)
+# initialize database schema
 make init-db
+
+# optionally populate static development data
+make seed-db
+
+# reset database schema
+make reset-db
 
 # run the app
 make run
 ```
+
+`make init-db` creates the schema only.
+`make seed-db` populates the database with 6 static assets only when it is empty.
+`make reset-db` drops the current SQLite schema and recreates it without loading seed data.
 
 ## Integration tests (end-to-end)
 
