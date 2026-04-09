@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List
 from app import db
 from app.models.asset import Asset
@@ -109,7 +110,7 @@ class AssetRepository:
 
     @staticmethod
     def get_by_id(asset_id: int) -> Optional[Asset]:
-        return Asset.query.get(asset_id)
+        return db.session.get(Asset, asset_id)
 
     @staticmethod
     def get_by_ticker(ticker: str) -> Optional[Asset]:
@@ -118,6 +119,94 @@ class AssetRepository:
     @staticmethod
     def get_by_symbol(symbol: str) -> Optional[Asset]:
         return Asset.query.filter_by(symbol=symbol).first()
+
+    @staticmethod
+    def get_or_create_sync_source(name: str, base_url: str):
+        from app.models.external_api_source import ExternalAPISource
+
+        source = ExternalAPISource.query.filter_by(base_url=base_url).first()
+        if source:
+            if source.name != name:
+                source.name = name
+                db.session.commit()
+            return source
+
+        source = ExternalAPISource(name=name, base_url=base_url, is_active=True)
+        db.session.add(source)
+        db.session.commit()
+        return source
+
+    @staticmethod
+    def create_sync_log(
+        asset_id: int,
+        source_id: int,
+        status: str,
+        synced_at: datetime,
+        message: str = None,
+        requested_url: str = None,
+        response_time_ms: int = None,
+    ):
+        from app.models.external_api_source import ExternalAPISource
+        from app.models.sync_log import SyncLog
+
+        sync_log = SyncLog(
+            asset_id=asset_id,
+            source_id=source_id,
+            status=status,
+            message=message,
+            requested_url=requested_url,
+            response_time_ms=response_time_ms,
+            synced_at=synced_at,
+        )
+        db.session.add(sync_log)
+
+        source = db.session.get(ExternalAPISource, source_id)
+        if source:
+            source.last_sync_at = synced_at
+
+        db.session.commit()
+        return sync_log
+
+    @staticmethod
+    def create_market_snapshot(
+        asset_id: int,
+        price: float,
+        captured_at: datetime,
+        open_price: float = None,
+        close_price: float = None,
+        high_price: float = None,
+        low_price: float = None,
+        volume: int = None,
+    ):
+        from app.models.market_snapshot import MarketSnapshot
+
+        snapshot = MarketSnapshot.query.filter_by(
+            asset_id=asset_id,
+            captured_at=captured_at,
+        ).first()
+
+        if snapshot is None:
+            snapshot = MarketSnapshot(
+                asset_id=asset_id,
+                price=price,
+                open_price=open_price,
+                close_price=close_price,
+                high_price=high_price,
+                low_price=low_price,
+                volume=volume,
+                captured_at=captured_at,
+            )
+            db.session.add(snapshot)
+        else:
+            snapshot.price = price
+            snapshot.open_price = open_price
+            snapshot.close_price = close_price
+            snapshot.high_price = high_price
+            snapshot.low_price = low_price
+            snapshot.volume = volume
+
+        db.session.commit()
+        return snapshot
 
     @staticmethod
     def create(data: dict) -> Asset:

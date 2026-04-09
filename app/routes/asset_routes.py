@@ -42,5 +42,5 @@ def delete_asset(asset_id: int):
 
 @bp.route('/assets/<int:asset_id>/sync', methods=['POST'])
 def sync_asset(asset_id: int):
-        """Trigger external sync for an asset (async). See `docs/openapi.yaml` for examples."""
+        """Sync market data for an asset and return the updated asset, snapshot, and sync log."""
         return AssetController.sync_asset(asset_id)
