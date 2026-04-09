@@ -37,7 +37,7 @@ class AssetService:
             'total': total,
             'offset': offset,
             'limit': limit,
-            'items': [a.to_dict() for a in items],
+            'data': [a.to_dict() for a in items],
         }
 
     @staticmethod
