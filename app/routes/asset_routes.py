@@ -7,32 +7,32 @@ bp = Blueprint('assets', __name__)
 
 @bp.route('/assets', methods=['GET'])
 def list_assets():
-                page = int(request.args.get('page', 1))
-                raw_limit = request.args.get('limit')
+        page = int(request.args.get('page', 1))
+        raw_limit = request.args.get('limit')
 
-                # Support 'limit=all' or 'limit=0' to return all records (no limit)
-                if raw_limit is None:
-                        limit = 50
-                elif isinstance(raw_limit, str) and raw_limit.lower() in ('0', 'all', 'none'):
-                        limit = None
-                else:
-                        try:
-                                limit = int(raw_limit)
-                        except (TypeError, ValueError):
-                                limit = 50
+        # Support 'limit=all' or 'limit=0' to return all records (no limit)
+        if raw_limit is None:
+            limit = 50
+        elif isinstance(raw_limit, str) and raw_limit.lower() in ('0', 'all', 'none'):
+            limit = None
+        else:
+            try:
+                limit = int(raw_limit)
+            except (TypeError, ValueError):
+                limit = 50
 
-                offset = None if limit is None else (page - 1) * limit
+        offset = None if limit is None else (page - 1) * limit
 
-                data = AssetService.list_assets(
-                                offset=offset,
-                                limit=limit,
-                                symbol=request.args.get('symbol'),
-                                name=request.args.get('name'),
-                                asset_type=request.args.get('asset_type'),
-                                sector=request.args.get('sector'),
-                                order_by=request.args.get('sort'),
-                                order_dir=request.args.get('order', 'asc'),
-                )
+        data = AssetService.list_assets(
+            offset=offset,
+            limit=limit,
+            symbol=request.args.get('symbol'),
+            name=request.args.get('name'),
+            asset_type=request.args.get('asset_type'),
+            sector=request.args.get('sector'),
+            order_by=request.args.get('sort'),
+            order_dir=request.args.get('order', 'asc'),
+        )
         return jsonify(data), 200
 
 
