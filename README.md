@@ -1,12 +1,14 @@
-# Assetly Backend (MVP)
+# Assetly Backend
 
-Flask backend for asset management (SQLite). Use `APP_CONFIG` env var to change config.
+Flask backend for asset management with SQLite. Use `APP_CONFIG` to switch configuration.
 
 ## Run locally
 
 ```bash
 python run.py
 ```
+
+Swagger UI is available at `http://127.0.0.1:5000/apidocs` when the app is running.
 
 ## CORS for the frontend
 
@@ -36,6 +38,7 @@ make init-db
 make seed-db
 make import-csv CSV=./assets.csv
 make run
+make test
 ```
 
 `make init-db` creates the schema only.
@@ -85,17 +88,6 @@ The default seed used by `make seed-db` is versioned in `data/seed_assets.csv`.
 ## Useful commands
 
 - `make reset-db`: recreate the SQLite schema from scratch.
-- `make test`: run the end-to-end integration script.
-- `make docs`: open Swagger UI locally.
+- `make test`: run the automated test suite.
 - `make setup`: create the virtualenv, install dependencies, and initialize the database.
-
-Swagger UI:
-
-```bash
-make docs
-```
-
-Notes:
-
-- `make docs` starts the app on port 5000 and opens `http://127.0.0.1:5000/apidocs` in your default browser. Logs are in `/tmp/assetly_docs.log`.
-- If you don't have a GUI (headless server), the server will run and you can open the URL from another machine.
+- `make docs`: start the API and open Swagger at `/apidocs`.

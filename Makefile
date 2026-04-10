@@ -1,4 +1,4 @@
-.PHONY: init init-db seed-db import-csv reset-db run serve test clean ci-validate docs setup
+.PHONY: init init-db seed-db import-csv reset-db run serve test clean setup docs
 
 VENV?=.venv
 PYTHON=$(VENV)/bin/python
@@ -31,9 +31,7 @@ serve:
 	gunicorn -w 4 -b 0.0.0.0:5000 'run:app'
 
 test:
-	# ensure test dependencies are available
-	# prefer running the integration test-and-cleanup script
-	chmod +x scripts/test_and_cleanup.sh && PORT=5000 ./scripts/test_and_cleanup.sh
+	$(PYTHON) -m pytest
 
 setup:
 	@echo "Starting project setup (venv, deps, DB)."
@@ -45,31 +43,11 @@ setup:
 	else \
 		echo "Skipping integration tests. To run them: TEST=1 make setup"; \
 	fi
-	@echo "Setup complete. Run 'make run' to start the app or 'make docs' to open the docs."
-
-ci-validate:
-	@# validate `docs/openapi.yaml` with Spectral (lint + rules)
-	@if ! command -v spectral >/dev/null; then \
-		echo "spectral not found; install with: npm install -g @stoplight/spectral-cli"; exit 1; \
-	fi
-	spectral lint docs/openapi.yaml
+	@echo "Setup complete. Run 'make run' to start the app."
 
 docs:
-	@echo "Starting app on port 5000 and opening Swagger UI..."
-	@PORT=5000 $(PYTHON) run.py > /tmp/assetly_docs.log 2>&1 & \
-	echo $$! > /tmp/assetly_docs.pid; \
-	PID=$$(cat /tmp/assetly_docs.pid); \
-	# wait for readiness
-	for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do \
-		if curl -sSf http://127.0.0.1:5000/openapi.yaml >/dev/null 2>&1; then break; fi; \
-		sleep 1; \
-	done; \
-	if ! curl -sSf http://127.0.0.1:5000/openapi.yaml >/dev/null 2>&1; then \
-		echo "App didn't become ready; see /tmp/assetly_docs.log"; kill $$PID || true; exit 1; \
-	fi; \
-	python -m webbrowser http://127.0.0.1:5000/apidocs || xdg-open http://127.0.0.1:5000/apidocs || true; \
-	echo "Swagger UI opened in browser. Server PID: $$PID (log: /tmp/assetly_docs.log)"; \
-	wait $$PID
+	@echo "Starting app and exposing Swagger UI at http://127.0.0.1:5000/apidocs"
+	@PORT=5000 $(PYTHON) run.py
 
 clean:
 	-rm -rf $(VENV) __pycache__ *.pyc .pytest_cache

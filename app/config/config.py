@@ -18,10 +18,6 @@ class Config:
     CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 
 
-class ProductionConfig(Config):
-    DEBUG = False
-
-
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
