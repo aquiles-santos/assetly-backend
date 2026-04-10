@@ -1,25 +1,19 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from app import db
 from app.models.asset import Asset
 
 
 class AssetRepository:
     @staticmethod
-    def get_all(offset: int = 0, limit: int = 100) -> List[Asset]:
-        return Asset.query.offset(offset).limit(limit).all()
-
-    @staticmethod
-    def get_filtered(
+    def _build_filtered_query(
         symbol: str = None,
         name: str = None,
         asset_type: str = None,
         sector: str = None,
-        offset: int = 0,
-        limit: int = 100,
         order_by: str = None,
         order_dir: str = 'asc',
-    ) -> List[Asset]:
+    ):
         q = Asset.query
 
         if symbol:
@@ -45,7 +39,7 @@ class AssetRepository:
             else:
                 q = q.order_by(col.asc())
 
-        return q.offset(offset).limit(limit).all()
+        return q
 
     @staticmethod
     def get_filtered_with_count(
@@ -58,30 +52,14 @@ class AssetRepository:
         order_by: str = None,
         order_dir: str = 'asc',
     ) -> tuple:
-        q = Asset.query
-
-        if symbol:
-            q = q.filter(Asset.symbol == symbol)
-        if name:
-            q = q.filter(Asset.name.ilike(f"%{name}%"))
-        if asset_type:
-            q = q.filter(Asset.asset_type == asset_type)
-        if sector:
-            q = q.filter(Asset.sector.ilike(f"%{sector}%"))
-
-        cols = {
-            'name': Asset.name,
-            'symbol': Asset.symbol,
-            'current_price': Asset.current_price,
-            'updated_at': Asset.updated_at,
-        }
-
-        col = cols.get(order_by)
-        if col is not None:
-            if (order_dir or '').lower() == 'desc':
-                q = q.order_by(col.desc())
-            else:
-                q = q.order_by(col.asc())
+        q = AssetRepository._build_filtered_query(
+            symbol=symbol,
+            name=name,
+            asset_type=asset_type,
+            sector=sector,
+            order_by=order_by,
+            order_dir=order_dir,
+        )
 
         total = q.count()
         items = q.offset(offset).limit(limit).all()
@@ -111,10 +89,6 @@ class AssetRepository:
     @staticmethod
     def get_by_id(asset_id: int) -> Optional[Asset]:
         return db.session.get(Asset, asset_id)
-
-    @staticmethod
-    def get_by_ticker(ticker: str) -> Optional[Asset]:
-        return Asset.query.filter_by(ticker=ticker).first()
 
     @staticmethod
     def get_by_symbol(symbol: str) -> Optional[Asset]:
