@@ -16,10 +16,6 @@ class Config:
     CORS_ALLOWED_ORIGINS = _parse_cors_origins()
     CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization']
     CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-    SWAGGER = {
-        'title': 'Assetly API',
-        'uiversion': 3,
-    }
 
 
 class ProductionConfig(Config):

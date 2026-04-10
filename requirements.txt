@@ -1,14 +1,7 @@
 
 Flask>=2.0
 Flask-SQLAlchemy>=2.5
-Flask-Migrate>=3.1
-Flask-Marshmallow>=0.14
-marshmallow>=3.0
 Flask-Cors>=3.0
-flasgger==0.9.5
-
-# Marshmallow SQLAlchemy integration
-marshmallow-sqlalchemy>=0.26
 
 # HTTP client for tests
 requests>=2.0

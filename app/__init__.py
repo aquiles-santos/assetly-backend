@@ -2,12 +2,10 @@ import os
 from typing import Optional
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 
 db = SQLAlchemy()
-ma = Marshmallow()
 
 
 def create_app(config_object: Optional[str] = None):
@@ -22,7 +20,6 @@ def create_app(config_object: Optional[str] = None):
 
     # init extensions
     db.init_app(app)
-    ma.init_app(app)
     # Allow the frontend to run either from file:// (Origin: null) or from a
     # local static server such as python3 -m http.server 5500.
     CORS(
@@ -36,55 +33,9 @@ def create_app(config_object: Optional[str] = None):
         },
     )
 
-    # Swagger / OpenAPI configuration
-    # Ensure Markup is available on the flask module for older flasgger imports
-    import flask as _flask
-    try:
-        # newer Flask may not expose Markup; provide from markupsafe
-        from flask import Markup  # type: ignore
-    except Exception:
-        from markupsafe import Markup as _Markup
-        _flask.Markup = _Markup
-    template = {
-        "swagger": "2.0",
-        "info": {
-            "title": "Assetly API",
-            "description": "API para gerenciar ativos (tickers), com endpoints para listagem, criação, atualização e remoção.",
-            "version": "1.0.0",
-        },
-        "host": "localhost:5000",
-        "basePath": "/api",
-        "schemes": ["http"],
-        "tags": [
-            {"name": "Assets", "description": "Operações relacionadas a ativos"}
-        ],
-        "definitions": {
-            "Asset": {
-                "type": "object",
-                "properties": {
-                    "id": {"type": "integer"},
-                    "ticker": {"type": "string"},
-                    "name": {"type": "string"},
-                    "exchange": {"type": "string"},
-                    "currency": {"type": "string"},
-                    "sector": {"type": "string"},
-                    "price": {"type": "number", "format": "float"},
-                    "market_cap": {"type": "number", "format": "float"},
-                    "last_price_update": {"type": "string", "format": "date-time"},
-                    "created_at": {"type": "string", "format": "date-time"},
-                    "updated_at": {"type": "string", "format": "date-time"}
-                }
-            }
-        }
-    }
-
     # Serve the OpenAPI spec and a Swagger UI page (using CDN) so docs are browser-accessible
     from flask import render_template_string, send_from_directory
     import pathlib
-
-    @app.route('/swagger.json')
-    def swagger_json():
-        return jsonify(template)
 
     @app.route('/apidocs')
     def apidocs():
