@@ -3,14 +3,9 @@ Flask>=2.0
 Flask-SQLAlchemy>=2.5
 Flask-Cors>=3.0
 
-# HTTP client for tests
-requests>=2.0
 yfinance>=0.2.54
 
-# Testing
 pytest>=7.0
-pytest-flask>=1.2
-pytest-cov>=4.0
 
 # Optional WSGI server for production
 gunicorn>=20.0

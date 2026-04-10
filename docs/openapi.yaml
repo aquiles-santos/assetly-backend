@@ -1,327 +1,303 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: Assetly API
-  version: 0.1.0
-  description: API para gerenciar ativos (tickers), com endpoints para listagem, criação, atualização, remoção e sincronização.
+  version: 1.0.0
+  description: API para gerenciamento de ativos e sincronizacao de dados de mercado.
 servers:
   - url: /
-    description: Local development server
 tags:
   - name: Assets
-    description: Operações relacionadas a ativos
 paths:
   /api/assets:
     get:
-      tags:
-        - Assets
-      summary: List assets
+      tags: [Assets]
+      summary: Lista ativos
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: symbol
+          schema:
+            type: string
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: asset_type
+          schema:
+            type: string
+        - in: query
+          name: sector
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [name, symbol, current_price, updated_at]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
       responses:
         '200':
-          description: Paginated list of assets
+          description: Lista paginada de ativos
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    offset:
-                      type: integer
-                  limit:
-                    type: integer
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Asset'
-              example:
-                total: 123
-                offset: 0
-                limit: 50
-                items:
-                  - id: 1
-                    symbol: AAPL
-                    name: Apple Inc.
-                    asset_type: equity
-                    exchange: NASDAQ
-                    currency: USD
-                    sector: Technology
-                    current_price: 170.12
-                    market_cap: 2700000000000
+                $ref: '#/components/schemas/AssetListResponse'
     post:
-      tags:
-        - Assets
-      summary: Create asset
+      tags: [Assets]
+      summary: Cria um ativo
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AssetInput'
-            example:
-              symbol: AAPL
-              name: Apple Inc.
-              asset_type: equity
-              currency: USD
-              exchange: NASDAQ
-              sector: Technology
-              current_price: 170.12
-              market_cap: 2700000000000
       responses:
         '201':
-          description: Created
+          description: Ativo criado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Asset'
+        '400':
+          description: Payload invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Simbolo duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/assets/{asset_id}:
     get:
-      tags:
-        - Assets
-      summary: Get asset
+      tags: [Assets]
+      summary: Busca um ativo
       parameters:
-        - in: path
-          name: asset_id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/AssetId'
       responses:
         '200':
-          description: Asset object with snapshots and last sync
+          description: Detalhes do ativo
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssetDetails'
-              example:
-                id: 6
-                symbol: VALE3.SA
-                name: Vale S.A.
-                asset_type: equity
-                exchange: B3
-                currency: BRL
-                sector: Materials
-                current_price: 85.59
-                open_price: 86.5
-                close_price: 83.69
-                day_high: 86.72
-                day_low: 84.73
-                volume: 24942400
-                market_cap: 365427718864.92
-                pe_ratio: 30.14
-                dividend_yield: 0.0824
-                external_api_url: https://finance.yahoo.com/quote/VALE3.SA
-                notes: Development seed with static reference values for a real listed asset.
-                created_at: '2026-04-09T07:17:07.907893'
-                updated_at: '2026-04-09T07:54:26.915050'
-                market_snapshots:
-                  - id: 1
-                    asset_id: 6
-                    price: 85.59
-                    open_price: 86.5
-                    close_price: 83.69
-                    high_price: 86.72
-                    low_price: 84.73
-                    volume: 24942400
-                    captured_at: '2026-04-08T20:07:49'
-                    created_at: '2026-04-09T07:54:26.915050'
-                last_sync:
-                  id: 3
-                  asset_id: 6
-                  source_id: 1
-                  status: success
-                  message: yahoo_finance_sync_completed
-                  requested_url: https://finance.yahoo.com/quote/VALE3.SA
-                  response_time_ms: 411
-                  synced_at: '2026-04-09T07:54:26.921015'
-                  created_at: '2026-04-09T07:54:26.921015'
         '404':
-          description: Not found
+          description: Ativo nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
     put:
-      tags:
-        - Assets
-      summary: Update asset
+      tags: [Assets]
+      summary: Atualiza totalmente um ativo
       parameters:
-        - in: path
-          name: asset_id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/AssetId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AssetInput'
-            example:
-              symbol: AAPL
-              name: Apple Incorporated
-              asset_type: equity
-              currency: USD
-              current_price: 171.0
       responses:
         '200':
-          description: Updated asset
+          description: Ativo atualizado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Asset'
         '400':
-          description: Bad request (missing or invalid fields)
+          description: Payload invalido
           content:
             application/json:
-              example:
-                error: 'missing_fields: symbol, name'
-        '409':
-          description: Conflict (duplicate symbol)
-          content:
-            application/json:
-              example:
-                error: 'symbol_already_exists: AAPL'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Not found
+          description: Ativo nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        '409':
+          description: Simbolo duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     patch:
-      tags:
-        - Assets
-      summary: Partially update asset
+      tags: [Assets]
+      summary: Atualiza parcialmente um ativo
       parameters:
-        - in: path
-          name: asset_id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/AssetId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Asset'
-            example:
-              name: Apple Incorporated
-              current_price: 171.0
+              type: object
+              additionalProperties: true
       responses:
         '200':
-          description: Updated asset
+          description: Ativo atualizado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Asset'
         '400':
-          description: Bad request (invalid fields)
+          description: Payload invalido
           content:
             application/json:
-              example:
-                error: 'invalid_fields'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Not found
+          description: Ativo nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        '409':
+          description: Simbolo duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
-      tags:
-        - Assets
-      summary: Delete asset
+      tags: [Assets]
+      summary: Remove um ativo
       parameters:
-        - in: path
-          name: asset_id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/AssetId'
       responses:
         '204':
-          description: No Content (deleted)
+          description: Ativo removido
         '404':
-          description: Not found
+          description: Ativo nao encontrado
           content:
             application/json:
-              example:
-                message: 'Not found'
-        '409':
-          description: Conflict (pending syncs)
-          content:
-            application/json:
-              example:
-                error: 'pending_syncs'
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
   /api/assets/{asset_id}/sync:
     post:
-      tags:
-        - Assets
-      summary: Sync market data for asset
+      tags: [Assets]
+      summary: Sincroniza dados de mercado de um ativo
       parameters:
-        - in: path
-          name: asset_id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/AssetId'
       responses:
         '200':
-          description: Asset market data synchronized successfully
+          description: Sincronizacao concluida
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssetSyncResponse'
-              example:
-                message: sync_completed
-                asset_id: 6
+        '404':
+          description: Ativo nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        '502':
+          description: Falha ao consultar provedor de mercado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
+  parameters:
+    AssetId:
+      in: path
+      name: asset_id
+      required: true
+      schema:
+        type: integer
   schemas:
-    Asset:
-      type: object
-      properties:
-        id:
-          type: integer
-        symbol:
-          type: string
-        name:
-          type: string
-        asset_type:
-          type: string
-        exchange:
-          type: string
-        currency:
-          type: string
-        sector:
-          type: string
-        current_price:
-          type: number
-          format: float
-        open_price:
-          type: number
-          format: float
-        close_price:
-          type: number
-          format: float
-        day_high:
-          type: number
-          format: float
-        day_low:
-          type: number
-          format: float
-        volume:
-          type: integer
-        market_cap:
-          type: number
-          format: float
-        pe_ratio:
-          type: number
-          format: float
-        dividend_yield:
-          type: number
-          format: float
-        external_api_url:
-          type: string
-        notes:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
     AssetInput:
       type: object
       required: [symbol, name, asset_type, currency]
       properties:
         symbol:
           type: string
-          description: Unique asset symbol/ticker
+          example: AAPL
         name:
           type: string
+          example: Apple Inc.
+        asset_type:
+          type: string
+          example: equity
+        currency:
+          type: string
+          example: USD
+        exchange:
+          type: string
+          nullable: true
+          example: NASDAQ
+        sector:
+          type: string
+          nullable: true
+          example: Technology
+        current_price:
+          type: number
+          nullable: true
+          example: 170.12
+        open_price:
+          type: number
+          nullable: true
+        close_price:
+          type: number
+          nullable: true
+        day_high:
+          type: number
+          nullable: true
+        day_low:
+          type: number
+          nullable: true
+        volume:
+          type: integer
+          nullable: true
+        market_cap:
+          type: number
+          nullable: true
+        pe_ratio:
+          type: number
+          nullable: true
+        dividend_yield:
+          type: number
+          nullable: true
+        external_api_url:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    Asset:
+      allOf:
+        - $ref: '#/components/schemas/AssetInput'
+        - type: object
+          properties:
+            id:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
+              nullable: true
+            updated_at:
+              type: string
+              format: date-time
+              nullable: true
     MarketSnapshot:
       type: object
       properties:
@@ -331,23 +307,29 @@ components:
           type: integer
         price:
           type: number
-          format: float
         open_price:
           type: number
+          nullable: true
         close_price:
           type: number
+          nullable: true
         high_price:
           type: number
+          nullable: true
         low_price:
           type: number
+          nullable: true
         volume:
           type: integer
+          nullable: true
         captured_at:
           type: string
           format: date-time
+          nullable: true
         created_at:
           type: string
           format: date-time
+          nullable: true
     SyncLog:
       type: object
       properties:
@@ -355,106 +337,76 @@ components:
           type: integer
         asset_id:
           type: integer
-        source_id:
-          type: integer
+        provider_name:
+          type: string
+          example: yahoo_finance
         status:
           type: string
+          enum: [pending, success, failed]
         message:
           type: string
+          nullable: true
         requested_url:
           type: string
+          nullable: true
         response_time_ms:
           type: integer
+          nullable: true
         synced_at:
           type: string
           format: date-time
+          nullable: true
         created_at:
           type: string
           format: date-time
+          nullable: true
     AssetDetails:
+      allOf:
+        - $ref: '#/components/schemas/Asset'
+        - type: object
+          properties:
+            market_snapshots:
+              type: array
+              items:
+                $ref: '#/components/schemas/MarketSnapshot'
+            last_sync:
+              allOf:
+                - $ref: '#/components/schemas/SyncLog'
+              nullable: true
+    AssetListResponse:
       type: object
       properties:
-        id:
+        total:
           type: integer
-        symbol:
-          type: string
-        name:
-          type: string
-        asset_type:
-          type: string
-        exchange:
-          type: string
-        currency:
-          type: string
-        sector:
-          type: string
-        current_price:
-          type: number
-          format: float
-        open_price:
-          type: number
-          format: float
-        close_price:
-          type: number
-          format: float
-        day_high:
-          type: number
-          format: float
-        day_low:
-          type: number
-          format: float
-        volume:
+        offset:
           type: integer
-        market_cap:
-          type: number
-          format: float
-        pe_ratio:
-          type: number
-        dividend_yield:
-          type: number
-        external_api_url:
-          type: string
-        notes:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        market_snapshots:
+        limit:
+          type: integer
+        data:
           type: array
           items:
-            $ref: '#/components/schemas/MarketSnapshot'
-        last_sync:
-          $ref: '#/components/schemas/SyncLog'
+            $ref: '#/components/schemas/Asset'
     AssetSyncResponse:
       type: object
       properties:
         message:
           type: string
+          example: sync_completed
         asset_id:
           type: integer
-        job_id:
-          type: string
         asset:
           $ref: '#/components/schemas/Asset'
         market_snapshot:
           $ref: '#/components/schemas/MarketSnapshot'
         last_sync:
           $ref: '#/components/schemas/SyncLog'
-    ApiError:
+    ErrorResponse:
       type: object
       properties:
         error:
           type: string
-        message:
-          type: string
-    SuccessResponse:
+    NotFoundResponse:
       type: object
       properties:
         message:
           type: string
-        job_id:
-          type: string
-        # operation objects moved to the path /api/assets/{asset_id}

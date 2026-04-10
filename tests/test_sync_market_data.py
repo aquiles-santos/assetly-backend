@@ -60,6 +60,7 @@ def test_sync_updates_asset_prices_and_snapshot(monkeypatch):
         assert payload['asset']['current_price'] == 85.59
         assert payload['market_snapshot']['price'] == 85.59
         assert payload['last_sync']['status'] == 'success'
+        assert payload['last_sync']['provider_name'] == 'yahoo_finance'
 
         asset_response = client.get(f'/api/assets/{asset_id}')
         assert asset_response.status_code == 200
@@ -75,6 +76,7 @@ def test_sync_updates_asset_prices_and_snapshot(monkeypatch):
         assert asset_payload['pe_ratio'] == 30.14
         assert asset_payload['dividend_yield'] == 0.0824
         assert asset_payload['last_sync']['message'] == 'yahoo_finance_sync_completed'
+        assert asset_payload['last_sync']['provider_name'] == 'yahoo_finance'
         assert asset_payload['market_snapshots'][0]['price'] == 85.59
 
     with app.app_context():

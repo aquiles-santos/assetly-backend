@@ -1,19 +1,18 @@
 from datetime import datetime
 from time import perf_counter
-from typing import List, Optional
+from typing import Optional
 
 from app.integrations.marketdata import MarketDataError, YahooFinanceClient
 from app.repositories.asset_repository import AssetRepository
 
 
 class AssetService:
+    MARKET_DATA_PROVIDER = 'yahoo_finance'
+
     class ValidationError(Exception):
         pass
 
     class DuplicateError(Exception):
-        pass
-
-    class DeletionError(Exception):
         pass
 
     class SyncError(Exception):
@@ -132,12 +131,7 @@ class AssetService:
         asset = AssetRepository.get_by_id(asset_id)
         if not asset:
             return False
-        try:
-            AssetRepository.delete(asset)
-        except RuntimeError as e:
-            if str(e) == 'pending_syncs':
-                raise AssetService.DeletionError('pending_syncs')
-            raise
+        AssetRepository.delete(asset)
         return True
 
     @staticmethod
@@ -146,10 +140,6 @@ class AssetService:
         if not asset:
             return None
 
-        source = AssetRepository.get_or_create_sync_source(
-            name='Yahoo Finance',
-            base_url=YahooFinanceClient.BASE_URL,
-        )
         requested_url = YahooFinanceClient.quote_url(asset.symbol)
         started_at = perf_counter()
 
@@ -189,7 +179,7 @@ class AssetService:
             response_time_ms = int((perf_counter() - started_at) * 1000)
             sync_log = AssetRepository.create_sync_log(
                 asset_id=asset.id,
-                source_id=source.id,
+                provider_name=AssetService.MARKET_DATA_PROVIDER,
                 status='success',
                 synced_at=synced_at,
                 message='yahoo_finance_sync_completed',
@@ -200,7 +190,7 @@ class AssetService:
             response_time_ms = int((perf_counter() - started_at) * 1000)
             AssetRepository.create_sync_log(
                 asset_id=asset.id,
-                source_id=source.id,
+                provider_name=AssetService.MARKET_DATA_PROVIDER,
                 status='failed',
                 synced_at=datetime.utcnow(),
                 message=str(e),
@@ -212,7 +202,7 @@ class AssetService:
             response_time_ms = int((perf_counter() - started_at) * 1000)
             AssetRepository.create_sync_log(
                 asset_id=asset.id,
-                source_id=source.id,
+                provider_name=AssetService.MARKET_DATA_PROVIDER,
                 status='failed',
                 synced_at=datetime.utcnow(),
                 message=f'unexpected_sync_error: {e}',
@@ -224,7 +214,6 @@ class AssetService:
         return {
             'message': 'sync_completed',
             'asset_id': updated_asset.id,
-            'job_id': f"sync-{updated_asset.id}-{int(synced_at.timestamp())}",
             'asset': updated_asset.to_dict(),
             'market_snapshot': snapshot.to_dict(),
             'last_sync': sync_log.to_dict(),

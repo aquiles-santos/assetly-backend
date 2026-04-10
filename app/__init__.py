@@ -1,6 +1,7 @@
 import os
+import pathlib
 from typing import Optional
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template_string, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
@@ -33,44 +34,41 @@ def create_app(config_object: Optional[str] = None):
         },
     )
 
-    # Serve the OpenAPI spec and a Swagger UI page (using CDN) so docs are browser-accessible
-    from flask import render_template_string, send_from_directory
-    import pathlib
-
     @app.route('/apidocs')
     def apidocs():
-        html = """
-        <!doctype html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Assetly API Docs</title>
-            <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" />
-          </head>
-          <body>
-            <div id="swagger-ui"></div>
-            <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
-            <script>
-              window.onload = function() {
-                                SwaggerUIBundle({
-                                    url: window.location.origin + '/openapi.yaml',
-                                    dom_id: '#swagger-ui',
-                                    presets: [
-                                        SwaggerUIBundle.presets.apis
-                                    ],
-                                });
-              };
-            </script>
-          </body>
-        </html>
-        """
-        return render_template_string(html)
+        return render_template_string(
+            """
+            <!doctype html>
+            <html lang="en">
+              <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <title>Assetly API Docs</title>
+                <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+                <style>
+                  body { margin: 0; background: #f5f5f5; }
+                  #swagger-ui { max-width: 1200px; margin: 0 auto; }
+                </style>
+              </head>
+              <body>
+                <div id="swagger-ui"></div>
+                <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+                <script>
+                  window.onload = function () {
+                    SwaggerUIBundle({
+                      url: window.location.origin + '/openapi.yaml',
+                      dom_id: '#swagger-ui'
+                    });
+                  };
+                </script>
+              </body>
+            </html>
+            """
+        )
 
     @app.route('/openapi.yaml')
     def openapi_yaml():
-        project_root = pathlib.Path.cwd()
-        docs_dir = project_root / 'docs'
+        docs_dir = pathlib.Path(app.root_path).parent / 'docs'
         return send_from_directory(str(docs_dir), 'openapi.yaml')
 
     # register blueprints and error handlers
