@@ -88,7 +88,9 @@ class YahooFinanceClient:
             'current_price': current_price,
             'open_price': cls._to_float(fast_info.get('open') or info.get('regularMarketOpen')),
             'close_price': cls._to_float(
-                fast_info.get('previousClose') or info.get('regularMarketPreviousClose')
+                info.get('regularMarketPreviousClose')
+                or info.get('previousClose')
+                or fast_info.get('previousClose')
             ),
             'day_high': cls._to_float(fast_info.get('dayHigh') or info.get('regularMarketDayHigh')),
             'day_low': cls._to_float(fast_info.get('dayLow') or info.get('regularMarketDayLow')),

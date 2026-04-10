@@ -1,56 +1,86 @@
 # Assetly Backend
 
-Flask backend for asset management with SQLite. Use `APP_CONFIG` to switch configuration.
+API backend do Assetly construída com Flask e SQLite para cadastro, consulta, sincronização e importação de ativos de mercado.
 
-## Run locally
+## Requisitos
 
-```bash
-python run.py
-```
+- Python 3.8 ou superior
+- `make` instalado no ambiente
 
-Swagger UI is available at `http://127.0.0.1:5000/apidocs` when the app is running.
+## Instalação
 
-## CORS for the frontend
+Siga os passos abaixo para configurar o ambiente local:
 
-By default, the API accepts these origins:
+1. Acesse a pasta do backend.
+2. Crie o ambiente virtual e instale as dependências.
+3. Inicialize o banco de dados.
+4. Opcionalmente, carregue a base inicial de ativos.
 
-- `null` for opening the frontend directly via `file://.../index.html`
-- `http://localhost:5500`
-- `http://127.0.0.1:5500`
-
-This keeps both frontend flows available: opening the file directly or serving it with `python3 -m http.server 5500`.
-
-To override the default list, set `CORS_ALLOWED_ORIGINS` as a comma-separated env var:
-
-```bash
-export CORS_ALLOWED_ORIGINS="null,http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000"
-```
-
-## Main flow
-
-- Python 3.8+ installed
-
-Quickstart:
+Comandos:
 
 ```bash
 make init
 make init-db
 make seed-db
-make import-csv CSV=./assets.csv
-make run
-make test
 ```
 
-`make init-db` creates the schema only.
-`make seed-db` imports the default CSV seed through Yahoo Finance and creates an initial market snapshot for each imported asset when the database is empty.
-`make import-csv CSV=./assets.csv` imports assets from Yahoo Finance using a CSV file.
-`make reset-db` drops the current SQLite schema and recreates it without loading seed data.
+## Configuração do ambiente local
 
-## Import assets from CSV
+O projeto usa uma virtualenv em `.venv` e um banco SQLite local.
 
-The importer reads a CSV file with one symbol per line or a header column named `symbol`, `ticker`, `code`, or `asset`.
+Comandos disponíveis:
 
-Optional columns can override the values returned by Yahoo Finance for the same asset:
+- `make init`: cria a virtualenv e instala as dependências
+- `make init-db`: cria o schema do banco
+- `make seed-db`: importa a base inicial a partir do CSV versionado em `data/seed_assets.csv`
+- `make reset-db`: recria o banco do zero sem carga inicial
+- `make test`: executa os testes automatizados
+- `make setup`: executa instalação e inicialização básica do projeto
+
+## Como executar
+
+Para iniciar a API localmente:
+
+```bash
+make run
+```
+
+A aplicação ficará disponível em:
+
+```text
+http://127.0.0.1:5000
+```
+
+Para expor a aplicação com Gunicorn:
+
+```bash
+make serve
+```
+
+## Documentação da API
+
+Para subir a aplicação com acesso à documentação Swagger:
+
+```bash
+make docs
+```
+
+Depois acesse:
+
+```text
+http://127.0.0.1:5000/apidocs
+```
+
+## Importação de ativos por CSV
+
+O importador aceita arquivos CSV com uma coluna contendo o símbolo do ativo. Os cabeçalhos aceitos incluem:
+
+- `symbol`
+- `ticker`
+- `code`
+- `asset`
+
+Colunas opcionais podem sobrescrever dados retornados pelo Yahoo Finance:
 
 - `name`
 - `asset_type`
@@ -59,35 +89,47 @@ Optional columns can override the values returned by Yahoo Finance for the same 
 - `currency`
 - `notes`
 
-Example:
+Exemplo de arquivo:
 
 ```csv
 symbol,asset_type,notes
-AAPL,equity,Imported from NASDAQ watchlist
-MSFT,equity,Imported from NASDAQ watchlist
-PETR4.SA,equity,Imported from B3 watchlist
-VALE3.SA,equity,Imported from B3 watchlist
+AAPL,equity,Importado da watchlist NASDAQ
+MSFT,equity,Importado da watchlist NASDAQ
+PETR4.SA,equity,Importado da watchlist B3
+VALE3.SA,equity,Importado da watchlist B3
 ```
 
-Run the import with:
+Para importar:
 
 ```bash
 make import-csv CSV=./assets.csv
 ```
 
-To update assets that already exist in the database:
+Para atualizar ativos já existentes:
 
 ```bash
 make import-csv CSV=./assets.csv UPDATE=1
 ```
 
-The importer fetches metadata from Yahoo Finance and stores the asset if the symbol returns enough data to satisfy the model, especially `currency`. It also creates an initial `market_snapshot` using the quote returned during import.
+## CORS para o frontend
 
-The default seed used by `make seed-db` is versioned in `data/seed_assets.csv`.
+Por padrão, a API aceita as seguintes origens:
 
-## Useful commands
+- `null`, para abertura direta do frontend via `file://`
+- `http://localhost:5500`
+- `http://127.0.0.1:5500`
 
-- `make reset-db`: recreate the SQLite schema from scratch.
-- `make test`: run the automated test suite.
-- `make setup`: create the virtualenv, install dependencies, and initialize the database.
-- `make docs`: start the API and open Swagger at `/apidocs`.
+Para sobrescrever a lista de origens permitidas, defina a variável abaixo:
+
+```bash
+export CORS_ALLOWED_ORIGINS="null,http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000"
+```
+
+## Estrutura principal
+
+- `app/`: código principal da API
+- `app/integrations/`: integrações externas, como Yahoo Finance
+- `app/models/`: modelos persistidos
+- `app/utils/`: utilitários de banco e importação
+- `data/`: arquivos de carga inicial
+- `tests/`: testes automatizados
