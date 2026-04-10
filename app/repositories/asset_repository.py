@@ -62,7 +62,15 @@ class AssetRepository:
         )
 
         total = q.count()
-        items = q.offset(offset).limit(limit).all()
+
+        # If limit is None we should return all results (ignore offset)
+        if limit is None:
+            items = q.all()
+        else:
+            # Ensure offset is an int (default 0)
+            _offset = offset or 0
+            items = q.offset(_offset).limit(limit).all()
+
         return items, total
 
     @staticmethod
