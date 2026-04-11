@@ -93,6 +93,113 @@ make init-db
 make seed-db
 ```
 
+### Script automatizado para Windows (sem Docker)
+
+Se você estiver no Windows e quiser evitar Docker e `make`, use o script PowerShell abaixo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-local-win.ps1
+```
+
+Se estiver usando `cmd.exe`, o comando é o mesmo:
+
+```bat
+powershell -ExecutionPolicy Bypass -File .\scripts\run-local-win.ps1
+```
+
+Esse script executa automaticamente:
+
+- upgrade de `pip`, `setuptools` e `wheel`
+- instalação de dependências via `requirements.txt`
+- inicialização do banco SQLite
+- carga inicial de ativos (seed)
+- start da API em `http://127.0.0.1:5000`
+
+Parâmetros úteis:
+
+- sem seed inicial:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-local-win.ps1 -SkipSeed
+```
+
+- somente setup (não sobe a API):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-local-win.ps1 -NoRun
+```
+
+- escolher manualmente o comando Python (ex.: apenas `python`):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-local-win.ps1 -PythonCommand "python"
+```
+
+### Passo a passo para Windows (sem Docker e sem make)
+
+Se o script não funcionar no seu ambiente, siga este fluxo manual.
+
+1. Instale o Python 3.10+ (recomendado via `winget`):
+
+```bat
+winget install -e --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
+```
+
+2. Feche e reabra o terminal.
+
+3. Desative aliases da Microsoft Store para evitar conflito com `python`:
+
+- abra: `Configurações (Settings) > Aplicativos (Apps) > Configurações avançadas de aplicativos (Advanced app settings) > Aliases de execução de aplicativos (App execution aliases)`
+- desative: `python.exe` e `python3.exe`
+
+Observação: em algumas instalações do Windows essas opções podem não aparecer. Se você não encontrar esses aliases e os comandos `where python` e `python --version` funcionarem corretamente, pode seguir para o passo 4 sem problema.
+
+4. Valide a instalação:
+
+```bat
+where python
+python --version
+```
+
+O caminho não deve apontar apenas para `WindowsApps`.
+
+5. Na pasta do projeto, instale dependências:
+
+```bat
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
+```
+
+6. Inicialize o banco:
+
+```bat
+python -c "from app import create_app; from app.utils.db_init import init_db; app=create_app(); init_db(app)"
+```
+
+7. (Opcional) Faça seed da base inicial:
+
+```bat
+python -c "from app import create_app; from app.utils.db_init import seed_db; app=create_app(); seed_db(app)"
+```
+
+8. Inicie a API:
+
+```bat
+python run.py
+```
+
+Depois acesse:
+
+```text
+http://127.0.0.1:5000
+```
+
+Swagger:
+
+```text
+http://127.0.0.1:5000/apidocs
+```
+
 ## Configuração do ambiente local
 
 O projeto usa uma virtualenv em `.venv` e um banco SQLite local. Esse fluxo continua disponível como alternativa para desenvolvimento local, principalmente em Linux e macOS. Em Linux, o alvo `make init` tenta usar `python3` automaticamente e aceita override via `BOOTSTRAP_PYTHON=/caminho/do/python3`.
