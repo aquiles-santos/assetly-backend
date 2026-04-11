@@ -50,4 +50,6 @@ docs:
 	@PORT=5000 $(PYTHON) run.py
 
 clean:
-	-rm -rf $(VENV) __pycache__ *.pyc .pytest_cache
+	-rm -rf $(VENV) .pytest_cache
+	-find . -type d -name '__pycache__' -exec rm -rf {} +
+	-find . -name '*.pyc' -delete

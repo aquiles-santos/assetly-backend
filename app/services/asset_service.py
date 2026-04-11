@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import ceil
 from time import perf_counter
 from typing import Optional
 
@@ -20,18 +21,23 @@ class AssetService:
 
     @staticmethod
     def list_assets(
+        page: int = 1,
         offset: int = 0,
         limit: int = 100,
+        search: str = None,
         symbol: str = None,
         name: str = None,
+        exchange: str = None,
         asset_type: str = None,
         sector: str = None,
         order_by: str = None,
         order_dir: str = 'asc',
     ) -> dict:
         items, total = AssetRepository.get_filtered_with_count(
+            search=search,
             symbol=symbol,
             name=name,
+            exchange=exchange,
             asset_type=asset_type,
             sector=sector,
             offset=offset,
@@ -39,8 +45,12 @@ class AssetService:
             order_by=order_by,
             order_dir=order_dir,
         )
+
+        total_pages = 1 if limit is None else ceil(total / limit) if total else 0
         return {
             'total': total,
+            'page': page,
+            'pages': total_pages,
             'offset': offset,
             'limit': limit,
             'data': [a.to_dict() for a in items],

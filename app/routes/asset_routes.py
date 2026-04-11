@@ -5,33 +5,49 @@ from app.services.asset_service import AssetService
 bp = Blueprint('assets', __name__)
 
 
+def _parse_positive_int(raw_value, default: int):
+        try:
+                value = int(raw_value)
+        except (TypeError, ValueError):
+                return default
+
+        return value if value > 0 else default
+
+
 @bp.route('/assets', methods=['GET'])
 def list_assets():
-        page = int(request.args.get('page', 1))
+        page = _parse_positive_int(request.args.get('page'), 1)
         raw_limit = request.args.get('limit')
+        search = request.args.get('search') or request.args.get('q')
 
         # Support 'limit=all' or 'limit=0' to return all records (no limit)
         if raw_limit is None:
-            limit = 50
-        elif isinstance(raw_limit, str) and raw_limit.lower() in ('0', 'all', 'none'):
-            limit = None
-        else:
-            try:
-                limit = int(raw_limit)
-            except (TypeError, ValueError):
                 limit = 50
+        elif isinstance(raw_limit, str) and raw_limit.lower() in ('0', 'all', 'none'):
+                limit = None
+        else:
+                try:
+                        limit = int(raw_limit)
+                except (TypeError, ValueError):
+                        limit = 50
+
+                if limit <= 0:
+                        limit = 50
 
         offset = None if limit is None else (page - 1) * limit
 
         data = AssetService.list_assets(
-            offset=offset,
-            limit=limit,
-            symbol=request.args.get('symbol'),
-            name=request.args.get('name'),
-            asset_type=request.args.get('asset_type'),
-            sector=request.args.get('sector'),
-            order_by=request.args.get('sort'),
-            order_dir=request.args.get('order', 'asc'),
+                page=page,
+                offset=offset,
+                limit=limit,
+                search=search,
+                symbol=request.args.get('symbol'),
+                name=request.args.get('name'),
+                exchange=request.args.get('exchange'),
+                asset_type=request.args.get('type') or request.args.get('asset_type'),
+                sector=request.args.get('sector'),
+                order_by=request.args.get('sort'),
+                order_dir=request.args.get('order', 'asc'),
         )
         return jsonify(data), 200
 

@@ -18,21 +18,29 @@ paths:
           schema:
             type: integer
             default: 1
+            minimum: 1
         - in: query
           name: limit
           schema:
             type: integer
             default: 50
+            minimum: 1
         - in: query
-          name: symbol
+          name: search
+          description: Busca por ticker ou nome do ativo.
           schema:
             type: string
         - in: query
-          name: name
+          name: q
+          description: Alias para search.
           schema:
             type: string
         - in: query
-          name: asset_type
+          name: exchange
+          schema:
+            type: string
+        - in: query
+          name: type
           schema:
             type: string
         - in: query
@@ -378,10 +386,16 @@ components:
       properties:
         total:
           type: integer
+        page:
+          type: integer
+        pages:
+          type: integer
         offset:
           type: integer
+          nullable: true
         limit:
           type: integer
+          nullable: true
         data:
           type: array
           items:

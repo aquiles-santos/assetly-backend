@@ -1,5 +1,8 @@
 from datetime import datetime
 from typing import Optional
+
+from sqlalchemy import or_
+
 from app import db
 from app.models.asset import Asset
 
@@ -7,8 +10,10 @@ from app.models.asset import Asset
 class AssetRepository:
     @staticmethod
     def _build_filtered_query(
+        search: str = None,
         symbol: str = None,
         name: str = None,
+        exchange: str = None,
         asset_type: str = None,
         sector: str = None,
         order_by: str = None,
@@ -16,10 +21,20 @@ class AssetRepository:
     ):
         q = Asset.query
 
+        if search:
+            like_pattern = f"%{search}%"
+            q = q.filter(
+                or_(
+                    Asset.symbol.ilike(like_pattern),
+                    Asset.name.ilike(like_pattern),
+                )
+            )
         if symbol:
             q = q.filter(Asset.symbol == symbol)
         if name:
             q = q.filter(Asset.name.ilike(f"%{name}%"))
+        if exchange:
+            q = q.filter(Asset.exchange.ilike(f"%{exchange}%"))
         if asset_type:
             q = q.filter(Asset.asset_type == asset_type)
         if sector:
@@ -43,8 +58,10 @@ class AssetRepository:
 
     @staticmethod
     def get_filtered_with_count(
+        search: str = None,
         symbol: str = None,
         name: str = None,
+        exchange: str = None,
         asset_type: str = None,
         sector: str = None,
         offset: int = 0,
@@ -53,8 +70,10 @@ class AssetRepository:
         order_dir: str = 'asc',
     ) -> tuple:
         q = AssetRepository._build_filtered_query(
+            search=search,
             symbol=symbol,
             name=name,
+            exchange=exchange,
             asset_type=asset_type,
             sector=sector,
             order_by=order_by,
