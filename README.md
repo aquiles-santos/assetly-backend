@@ -73,6 +73,8 @@ AUTO_SEED_DB=0 docker compose up --build
 
 Use este fluxo apenas se você quiser rodar o projeto sem Docker.
 
+Observação: os comandos com `make` deste tópico são voltados para ambientes Unix-like (Linux/macOS, ou WSL no Windows).
+
 1. Acesse a pasta do projeto.
 
 2. Crie o ambiente virtual e instale as dependências.
@@ -93,7 +95,14 @@ make init-db
 make seed-db
 ```
 
-### Script automatizado para Windows (sem Docker)
+Para Windows sem Docker e sem `make`, existem duas opções para o mesmo cenário:
+
+- Opção 1: via script (automatizada)
+- Opção 2: via comandos manuais
+
+Leia as duas opções abaixo e escolha apenas uma.
+
+### Script automatizado para Windows (sem Docker ou WSL)
 
 Se você estiver no Windows e quiser evitar Docker e `make`, use o script PowerShell abaixo:
 
@@ -135,7 +144,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-local-win.ps1 -NoRun
 powershell -ExecutionPolicy Bypass -File .\scripts\run-local-win.ps1 -PythonCommand "python"
 ```
 
-### Passo a passo para Windows (sem Docker e sem make)
+### Passo a passo para Windows (sem Docker ou WSL)
 
 Se o script não funcionar no seu ambiente, siga este fluxo manual.
 
