@@ -1,11 +1,45 @@
 .PHONY: init init-db seed-db import-csv reset-db run serve test clean setup docs
 
 VENV?=.venv
+BOOTSTRAP_PYTHON?=$(shell command -v python3 2>/dev/null || command -v python 2>/dev/null)
+AUTO_INSTALL_SYSTEM_DEPS?=0
 PYTHON=$(VENV)/bin/python
 PIP=$(VENV)/bin/pip
 
 init:
-	python -m venv $(VENV)
+	@if [ -z "$(BOOTSTRAP_PYTHON)" ]; then \
+		echo "Python 3 not found. Install python3 or run 'make init BOOTSTRAP_PYTHON=/path/to/python3'."; exit 127; \
+	fi
+	@if ! $(BOOTSTRAP_PYTHON) -c "import ensurepip" >/dev/null 2>&1; then \
+		echo "Python venv support is missing for $(BOOTSTRAP_PYTHON)."; \
+		if command -v apt-get >/dev/null 2>&1; then \
+			if [ "$(AUTO_INSTALL_SYSTEM_DEPS)" = "1" ]; then \
+				echo "Attempting to install python3-venv via apt-get..."; \
+				sudo apt-get update && sudo apt-get install -y python3-venv; \
+			elif [ -t 0 ]; then \
+				printf "Install python3-venv now with sudo apt-get install -y python3-venv? [y/N] "; \
+				read answer; \
+				case "$$answer" in \
+					y|Y|yes|YES) sudo apt-get update && sudo apt-get install -y python3-venv ;; \
+					*) echo "Skipped system dependency installation."; exit 1 ;; \
+				esac; \
+			else \
+				echo "On Debian/Ubuntu, install it with: sudo apt install python3-venv"; \
+				echo "Or retry with automatic installation: make init AUTO_INSTALL_SYSTEM_DEPS=1"; \
+				echo "If you want the simplest cross-platform setup, use Docker: docker compose up --build"; \
+				exit 1; \
+			fi; \
+			if ! $(BOOTSTRAP_PYTHON) -c "import ensurepip" >/dev/null 2>&1; then \
+				echo "python3-venv was not installed successfully or ensurepip is still unavailable."; \
+				exit 1; \
+			fi; \
+		else \
+			echo "Install the system package that provides python3 venv support for your OS."; \
+			echo "If you want the simplest cross-platform setup, use Docker: docker compose up --build"; \
+			exit 1; \
+		fi; \
+	fi
+	$(BOOTSTRAP_PYTHON) -m venv $(VENV)
 	$(PIP) install --upgrade pip setuptools wheel
 	$(PIP) install -r requirements.txt
 

@@ -2,13 +2,14 @@ from pathlib import Path
 
 from app import db
 from app.models import Asset
-from app.utils.import_assets_csv import import_assets
 
 
 DEFAULT_SEED_CSV_PATH = Path(__file__).resolve().parents[2] / 'data' / 'seed_assets.csv'
 
 
 def seed_assets(app):
+    from app.utils.import_assets_csv import import_assets
+
     if not DEFAULT_SEED_CSV_PATH.exists():
         raise FileNotFoundError(f'Seed CSV not found: {DEFAULT_SEED_CSV_PATH}')
 

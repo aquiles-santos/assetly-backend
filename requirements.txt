@@ -4,6 +4,7 @@ Flask-SQLAlchemy>=2.5
 Flask-Cors>=3.0
 
 yfinance>=0.2.54
+multitasking<0.0.12
 
 pytest>=7.0
 

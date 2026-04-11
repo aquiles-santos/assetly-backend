@@ -4,12 +4,76 @@ API backend do Assetly construída com Flask e SQLite para cadastro, consulta, s
 
 ## Requisitos
 
-- Python 3.8 ou superior
-- `make` instalado no ambiente
+- Docker e Docker Compose para o fluxo recomendado de execução
+- Python 3.8 ou superior e `make` apenas para o fluxo local alternativo
 
-## Instalação
+## Escolha recomendada
 
-Siga os passos abaixo para configurar o ambiente local:
+Use Docker como caminho oficial de execução.
+
+O fluxo com virtualenv continua disponível, mas deve ser tratado como alternativa para desenvolvimento local, principalmente em Linux e macOS.
+
+## Quick Start
+
+Para a maioria dos usuários, o setup é este:
+
+```bash
+docker compose up --build
+```
+
+Depois acesse:
+
+```text
+http://127.0.0.1:5000
+```
+
+Swagger:
+
+```text
+http://127.0.0.1:5000/apidocs
+```
+
+## Execução recomendada com Docker
+
+O caminho mais previsível para rodar o projeto em Linux, macOS e Windows é usar Docker.
+
+Suba a API com:
+
+```bash
+docker compose up --build
+```
+
+Esse fluxo:
+
+- instala as dependências dentro do container
+- cria o schema do banco automaticamente ao iniciar
+- carrega a base inicial de ativos automaticamente na primeira execução
+- persiste o SQLite em um volume Docker
+
+Para parar os containers:
+
+```bash
+docker compose down
+```
+
+Para remover também o banco persistido e recriar tudo do zero:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Se você quiser subir sem a carga inicial automática:
+
+```bash
+AUTO_SEED_DB=0 docker compose up --build
+```
+
+## Fluxo local alternativo
+
+Use este fluxo apenas se você quiser rodar o projeto sem Docker.
+
+Passos:
 
 1. Acesse a pasta do backend.
 2. Crie o ambiente virtual e instale as dependências.
@@ -26,7 +90,21 @@ make seed-db
 
 ## Configuração do ambiente local
 
-O projeto usa uma virtualenv em `.venv` e um banco SQLite local.
+O projeto usa uma virtualenv em `.venv` e um banco SQLite local. Esse fluxo continua disponível como alternativa para desenvolvimento local, principalmente em Linux e macOS. Em Linux, o alvo `make init` tenta usar `python3` automaticamente e aceita override via `BOOTSTRAP_PYTHON=/caminho/do/python3`.
+
+Observação para Debian/Ubuntu: se `make init` falhar informando que `ensurepip` não está disponível, instale o suporte a virtualenv do sistema com:
+
+```bash
+sudo apt install python3-venv
+```
+
+Se preferir, o próprio fluxo local pode tentar instalar essa dependência automaticamente:
+
+```bash
+make init AUTO_INSTALL_SYSTEM_DEPS=1
+```
+
+Em terminais interativos no Debian/Ubuntu, `make init` também pode pedir sua confirmação antes de executar a instalação via `sudo apt-get install -y python3-venv`.
 
 Comandos disponíveis:
 
