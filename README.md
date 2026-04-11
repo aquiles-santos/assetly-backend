@@ -11,7 +11,7 @@ API backend do Assetly construída com Flask e SQLite para cadastro, consulta, s
 
 Use Docker como caminho oficial de execução.
 
-O fluxo com virtualenv continua disponível, mas deve ser tratado como alternativa para desenvolvimento local, principalmente em Linux e macOS.
+O fluxo com virtualenv está disponível, mas deve ser tratado como alternativa para desenvolvimento local, principalmente em Linux e macOS.
 
 ## Quick Start
 
@@ -73,18 +73,23 @@ AUTO_SEED_DB=0 docker compose up --build
 
 Use este fluxo apenas se você quiser rodar o projeto sem Docker.
 
-Passos:
+1. Acesse a pasta do projeto.
 
-1. Acesse a pasta do backend.
 2. Crie o ambiente virtual e instale as dependências.
-3. Inicialize o banco de dados.
-4. Opcionalmente, carregue a base inicial de ativos.
-
-Comandos:
 
 ```bash
 make init
+```
+
+3. Inicialize o banco de dados.
+
+```bash
 make init-db
+```
+
+4. Opcionalmente, carregue a base inicial de ativos.
+
+```bash
 make seed-db
 ```
 

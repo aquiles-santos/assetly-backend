@@ -24,6 +24,8 @@ instance/
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.ruff_cache/
 
 # Packaging
 *.egg-info/
@@ -41,6 +43,8 @@ Thumbs.db
 # local env variants
 .env.local
 .env.*
+.envrc
+.python-version
 
 # Node modules (if adding JS tooling)
 node_modules/
