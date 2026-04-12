@@ -36,12 +36,11 @@ class Asset(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
             'symbol': self.symbol,
             'name': self.name,
             'asset_type': self.asset_type,
-            'exchange': self.exchange,
             'currency': self.currency,
+            'exchange': self.exchange,
             'sector': self.sector,
             'current_price': self.current_price,
             'open_price': self.open_price,
@@ -54,6 +53,7 @@ class Asset(db.Model):
             'dividend_yield': self.dividend_yield,
             'external_api_url': self.external_api_url,
             'notes': self.notes,
+            'id': self.id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }

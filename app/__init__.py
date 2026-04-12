@@ -11,6 +11,9 @@ db = SQLAlchemy()
 
 def create_app(config_object: Optional[str] = None):
     app = Flask(__name__)
+    # Preserve insertion order from dicts in JSON responses.
+    app.config['JSON_SORT_KEYS'] = False
+    app.json.sort_keys = False
 
     # load configuration from parameter or environment
     if config_object:

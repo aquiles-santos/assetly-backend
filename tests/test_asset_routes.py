@@ -141,3 +141,106 @@ def test_list_assets_defaults_invalid_page_and_limit_values():
     with app.app_context():
         db.session.remove()
         db.drop_all()
+
+
+def test_asset_response_key_order_matches_request_body_order_for_crud_and_get_by_id():
+    app = create_app('app.config.config.TestingConfig')
+
+    expected_asset_key_order = [
+        'symbol',
+        'name',
+        'asset_type',
+        'currency',
+        'exchange',
+        'sector',
+        'current_price',
+        'open_price',
+        'close_price',
+        'day_high',
+        'day_low',
+        'volume',
+        'market_cap',
+        'pe_ratio',
+        'dividend_yield',
+        'external_api_url',
+        'notes',
+        'id',
+        'created_at',
+        'updated_at',
+    ]
+
+    with app.app_context():
+        db.create_all()
+
+    create_payload = {
+        'symbol': 'MSFT',
+        'name': 'Microsoft Corporation',
+        'asset_type': 'stock',
+        'currency': 'USD',
+        'exchange': 'NASDAQ',
+        'sector': 'Technology',
+        'current_price': 418.5,
+        'open_price': 415.1,
+        'close_price': 417.8,
+        'day_high': 420.0,
+        'day_low': 414.7,
+        'volume': 1000000,
+        'market_cap': 3100000000000,
+        'pe_ratio': 35.1,
+        'dividend_yield': 0.72,
+        'external_api_url': 'https://example.com/msft',
+        'notes': 'blue chip',
+    }
+
+    with app.test_client() as client:
+        post_response = client.post('/api/assets', json=create_payload)
+
+        assert post_response.status_code == 201
+        post_payload = post_response.get_json()
+        assert list(post_payload.keys()) == expected_asset_key_order
+
+        asset_id = post_payload['id']
+
+        put_payload = {
+            'symbol': 'MSFT',
+            'name': 'Microsoft Corp',
+            'asset_type': 'stock',
+            'currency': 'USD',
+            'exchange': 'NASDAQ',
+            'sector': 'Technology',
+            'current_price': 420.0,
+            'open_price': 416.0,
+            'close_price': 419.5,
+            'day_high': 421.0,
+            'day_low': 415.0,
+            'volume': 1100000,
+            'market_cap': 3150000000000,
+            'pe_ratio': 35.5,
+            'dividend_yield': 0.73,
+            'external_api_url': 'https://example.com/msft-v2',
+            'notes': 'updated via put',
+        }
+        put_response = client.put(f'/api/assets/{asset_id}', json=put_payload)
+
+        assert put_response.status_code == 200
+        put_result = put_response.get_json()
+        assert list(put_result.keys()) == expected_asset_key_order
+
+        patch_response = client.patch(
+            f'/api/assets/{asset_id}',
+            json={'notes': 'updated via patch'},
+        )
+
+        assert patch_response.status_code == 200
+        patch_result = patch_response.get_json()
+        assert list(patch_result.keys()) == expected_asset_key_order
+
+        get_response = client.get(f'/api/assets/{asset_id}')
+
+        assert get_response.status_code == 200
+        get_result = get_response.get_json()
+        assert list(get_result.keys()) == expected_asset_key_order + ['market_snapshots', 'last_sync']
+
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()

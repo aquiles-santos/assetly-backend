@@ -292,20 +292,72 @@ components:
           type: string
           nullable: true
     Asset:
-      allOf:
-        - $ref: '#/components/schemas/AssetInput'
-        - type: object
-          properties:
-            id:
-              type: integer
-            created_at:
-              type: string
-              format: date-time
-              nullable: true
-            updated_at:
-              type: string
-              format: date-time
-              nullable: true
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: AAPL
+        name:
+          type: string
+          example: Apple Inc.
+        asset_type:
+          type: string
+          example: equity
+        currency:
+          type: string
+          example: USD
+        exchange:
+          type: string
+          nullable: true
+          example: NASDAQ
+        sector:
+          type: string
+          nullable: true
+          example: Technology
+        current_price:
+          type: number
+          nullable: true
+          example: 170.12
+        open_price:
+          type: number
+          nullable: true
+        close_price:
+          type: number
+          nullable: true
+        day_high:
+          type: number
+          nullable: true
+        day_low:
+          type: number
+          nullable: true
+        volume:
+          type: integer
+          nullable: true
+        market_cap:
+          type: number
+          nullable: true
+        pe_ratio:
+          type: number
+          nullable: true
+        dividend_yield:
+          type: number
+          nullable: true
+        external_api_url:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
     MarketSnapshot:
       type: object
       properties:
@@ -369,18 +421,80 @@ components:
           format: date-time
           nullable: true
     AssetDetails:
-      allOf:
-        - $ref: '#/components/schemas/Asset'
-        - type: object
-          properties:
-            market_snapshots:
-              type: array
-              items:
-                $ref: '#/components/schemas/MarketSnapshot'
-            last_sync:
-              allOf:
-                - $ref: '#/components/schemas/SyncLog'
-              nullable: true
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: AAPL
+        name:
+          type: string
+          example: Apple Inc.
+        asset_type:
+          type: string
+          example: equity
+        currency:
+          type: string
+          example: USD
+        exchange:
+          type: string
+          nullable: true
+          example: NASDAQ
+        sector:
+          type: string
+          nullable: true
+          example: Technology
+        current_price:
+          type: number
+          nullable: true
+          example: 170.12
+        open_price:
+          type: number
+          nullable: true
+        close_price:
+          type: number
+          nullable: true
+        day_high:
+          type: number
+          nullable: true
+        day_low:
+          type: number
+          nullable: true
+        volume:
+          type: integer
+          nullable: true
+        market_cap:
+          type: number
+          nullable: true
+        pe_ratio:
+          type: number
+          nullable: true
+        dividend_yield:
+          type: number
+          nullable: true
+        external_api_url:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        market_snapshots:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketSnapshot'
+        last_sync:
+          allOf:
+            - $ref: '#/components/schemas/SyncLog'
+          nullable: true
     AssetListResponse:
       type: object
       properties:
