@@ -18,7 +18,7 @@ def seed_assets(app):
 
 def init_db(app, reset: bool = False):
     with app.app_context():
-        import app.models  # noqa: F401
+        import app.models
 
         if reset:
             db.drop_all()

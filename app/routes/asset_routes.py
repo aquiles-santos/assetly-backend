@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from app.services.asset_service import AssetService
+from app.utils import import_assets_csv as import_csv_utils
 
 bp = Blueprint('assets', __name__)
 
@@ -20,7 +21,6 @@ def list_assets():
         raw_limit = request.args.get('limit')
         search = request.args.get('search') or request.args.get('q')
 
-        # Support 'limit=all' or 'limit=0' to return all records (no limit)
         if raw_limit is None:
                 limit = 50
         elif isinstance(raw_limit, str) and raw_limit.lower() in ('0', 'all', 'none'):
@@ -115,3 +115,30 @@ def sync_asset(asset_id: int):
                 return jsonify(result), 200
         except AssetService.SyncError as exc:
                 return jsonify({'error': str(exc)}), 502
+
+
+@bp.route('/assets/import', methods=['POST'])
+def import_assets_csv():
+        
+        upload = request.files.get('file') or request.files.get('csv')
+        if not upload:
+                return jsonify({'error': 'no_file_provided'}), 400
+        
+        update_existing = request.form.get('update_existing') or request.args.get('update_existing')
+        update_existing = str(update_existing).lower() in ('1', 'true', 'yes')
+
+        try:
+                raw = upload.read()
+                try:
+                        content = raw.decode('utf-8-sig')
+                except Exception:
+                        content = raw
+
+                records = import_csv_utils.load_records_from_text(content)
+                if not records:
+                        return jsonify({'message': 'no_symbols_found'}), 200
+
+                summary = import_csv_utils.import_records(records, update_existing=update_existing)
+                return jsonify(summary), 200
+        except Exception as exc:
+                return jsonify({'error': str(exc)}), 500

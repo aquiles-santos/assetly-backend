@@ -63,12 +63,8 @@ class AssetService:
             return None
 
         result = asset.to_dict()
-
-        # recent market snapshots
         snapshots = AssetRepository.get_recent_snapshots(asset_id, limit=10)
         result['market_snapshots'] = [s.to_dict() for s in snapshots]
-
-        # last external sync metadata
         last_sync = AssetRepository.get_last_sync_log(asset_id)
         result['last_sync'] = last_sync.to_dict() if last_sync else None
 
@@ -76,19 +72,48 @@ class AssetService:
 
     @staticmethod
     def create_asset(data: dict) -> dict:
-        # required fields
-        required = ['symbol', 'name', 'asset_type', 'currency']
+        
+        required = ['symbol']
         missing = [f for f in required if not data.get(f)]
         if missing:
             raise AssetService.ValidationError(f"missing_fields: {', '.join(missing)}")
 
         symbol = data.get('symbol')
-        # check duplicate symbol
+        
         exists = AssetRepository.get_by_symbol(symbol)
         if exists:
             raise AssetService.DuplicateError(f"symbol_already_exists: {symbol}")
+        
+        payload = dict(data)
+        payload['symbol'] = symbol.upper()
+        
+        try:
+            quote = YahooFinanceClient.fetch_quote(payload['symbol'])
+        except Exception:
+            quote = {}
 
-        asset = AssetRepository.create(data)
+        payload.setdefault('name', quote.get('name') or payload['symbol'])
+        payload.setdefault('asset_type', quote.get('asset_type') or 'equity')
+        payload.setdefault('currency', quote.get('currency') or payload.get('currency') or 'USD')
+
+        
+        for key in (
+            'current_price',
+            'open_price',
+            'close_price',
+            'day_high',
+            'day_low',
+            'volume',
+            'market_cap',
+            'pe_ratio',
+            'dividend_yield',
+        ):
+            if payload.get(key) is None and quote.get(key) is not None:
+                payload[key] = quote.get(key)
+
+        payload.setdefault('external_api_url', quote.get('requested_url') or YahooFinanceClient.quote_url(payload['symbol']))
+
+        asset = AssetRepository.create(payload)
         return asset.to_dict()
 
     @staticmethod
@@ -97,20 +122,19 @@ class AssetService:
         if not asset:
             return None
 
-        # For a full update (PUT) follow REST semantics: require required fields
-        required = ['symbol', 'name', 'asset_type', 'currency']
+        
+        required = ['symbol']
         missing = [f for f in required if not data.get(f)]
         if missing:
             raise AssetService.ValidationError(f"missing_fields: {', '.join(missing)}")
 
-        # if symbol is changing, ensure no duplicate symbol for another asset
+        
         new_symbol = data.get('symbol')
         if new_symbol and new_symbol != asset.symbol:
             exists = AssetRepository.get_by_symbol(new_symbol)
             if exists and exists.id != asset.id:
                 raise AssetService.DuplicateError(f"symbol_already_exists: {new_symbol}")
-
-        # explicitly update `updated_at`
+        
         data['updated_at'] = datetime.utcnow()
 
         updated = AssetRepository.update(asset, data)
@@ -123,14 +147,13 @@ class AssetService:
         if not asset:
             return None
 
-        # If symbol provided and changing, ensure uniqueness
+        
         new_symbol = data.get('symbol')
         if new_symbol and new_symbol != asset.symbol:
             exists = AssetRepository.get_by_symbol(new_symbol)
             if exists and exists.id != asset.id:
                 raise AssetService.DuplicateError(f"symbol_already_exists: {new_symbol}")
-
-        # Update timestamp
+        
         data['updated_at'] = datetime.utcnow()
 
         updated = AssetRepository.update(asset, data)
